@@ -1,0 +1,23 @@
+@import "tailwindcss";
+@source not "../../*.md";
+@source not "../../../*.md";
+
+@custom-variant dark (&:is(.dark, .dark *));
+
+@theme {
+  --font-sans: var(--font-league-spartan), ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    @apply font-sans;
+    color-scheme: light;
+    overflow-y: scroll;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+}

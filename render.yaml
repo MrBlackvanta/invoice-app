@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: vanta-invoice-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+    buildFilter:
+      paths:
+        - backend/**
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: Cors__AllowedOrigins__0
+        value: https://invoice-app.abdelrhman-ahmed8881.workers.dev
+      - key: ConnectionStrings__Default
+        sync: false
