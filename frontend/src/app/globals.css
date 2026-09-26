@@ -14,7 +14,11 @@
   --rail: #373b53;
   --ink: #0c0e16;
   --muted: #666d99;
+  --client: var(--muted);
+  --hash: #6672b8;
   --edge: #dfe3fa;
+  --popover: #ffffff;
+  --control: #dfe3fa;
   --on-rail: #7e88c3;
   --on-raised: #dfe3fa;
   --accent-ink: #795afa;
@@ -36,7 +40,11 @@ html.dark {
   --rail: #1e2139;
   --ink: #ffffff;
   --muted: #dfe3fa;
+  --client: var(--ink);
+  --hash: #7e88c3;
   --edge: #252945;
+  --popover: #252945;
+  --control: #1e2139;
   --on-rail: #858bb2;
   --accent-ink: #a08cff;
   --danger-ink: #ff9797;
@@ -57,7 +65,11 @@ html.dark {
   --color-rail: var(--rail);
   --color-ink: var(--ink);
   --color-muted: var(--muted);
+  --color-client: var(--client);
+  --color-hash: var(--hash);
   --color-edge: var(--edge);
+  --color-popover: var(--popover);
+  --color-control: var(--control);
   --color-on-rail: var(--on-rail);
   --color-on-raised: var(--on-raised);
   --color-accent-ink: var(--accent-ink);
@@ -80,7 +92,7 @@ html.dark {
 
   --text-display: 2.25rem;
   --text-display--line-height: 2.0625rem;
-  --text-display--letter-spacing: -0.03125em;
+  --text-display--letter-spacing: -0.02778em;
   --text-heading: 1.5rem;
   --text-heading--line-height: 1.375rem;
   --text-heading--letter-spacing: -0.03125em;
@@ -93,9 +105,15 @@ html.dark {
   --text-body: 0.9375rem;
   --text-body--line-height: 0.9375rem;
   --text-body--letter-spacing: -0.01667em;
+  --text-amount: 0.9375rem;
+  --text-amount--line-height: 1.5rem;
+  --text-amount--letter-spacing: -0.01667em;
   --text-meta: 0.8125rem;
-  --text-meta--line-height: 1.125rem;
-  --text-meta--letter-spacing: -0.00769em;
+  --text-meta--line-height: 0.9375rem;
+  --text-meta--letter-spacing: -0.01923em;
+  --text-prose: 0.8125rem;
+  --text-prose--line-height: 1.125rem;
+  --text-prose--letter-spacing: -0.00769em;
 
   --radius-field: 0.25rem;
   --radius-chip: 0.375rem;
@@ -115,7 +133,7 @@ html.dark {
 
 @layer base {
   html {
-    @apply text-body font-sans;
+    @apply text-body font-sans font-medium;
     color-scheme: light;
     overflow-y: scroll;
   }
