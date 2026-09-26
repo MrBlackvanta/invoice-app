@@ -4,20 +4,146 @@
 
 @custom-variant dark (&:is(.dark, .dark *));
 
+:root {
+  --canvas: #f8f8fb;
+  --surface: #ffffff;
+  --sunken: #f9fafe;
+  --sunken-hover: #dfe3fa;
+  --raised: #373b53;
+  --raised-hover: #0c0e16;
+  --rail: #373b53;
+  --ink: #0c0e16;
+  --muted: #666d99;
+  --edge: #dfe3fa;
+  --on-rail: #7e88c3;
+  --on-raised: #dfe3fa;
+  --accent-ink: #795afa;
+  --danger-ink: #e62525;
+  --paid: #1a8360;
+  --pending: #ac6000;
+  --draft: #373b53;
+  --draft-tint: #373b530f;
+  --popover-shadow: 0 10px 20px #48549f40;
+}
+
+html.dark {
+  --canvas: #141625;
+  --surface: #1e2139;
+  --sunken: #252945;
+  --sunken-hover: #ffffff;
+  --raised: #0c0e16;
+  --raised-hover: #1e2139;
+  --rail: #1e2139;
+  --ink: #ffffff;
+  --muted: #dfe3fa;
+  --edge: #252945;
+  --on-rail: #858bb2;
+  --accent-ink: #a08cff;
+  --danger-ink: #ff9797;
+  --paid: #33d69f;
+  --pending: #ff8f00;
+  --draft: #dfe3fa;
+  --draft-tint: #dfe3fa0f;
+  --popover-shadow: 0 10px 20px #00000040;
+}
+
 @theme {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-sunken-hover: var(--sunken-hover);
+  --color-raised: var(--raised);
+  --color-raised-hover: var(--raised-hover);
+  --color-rail: var(--rail);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-edge: var(--edge);
+  --color-on-rail: var(--on-rail);
+  --color-on-raised: var(--on-raised);
+  --color-accent-ink: var(--accent-ink);
+  --color-danger-ink: var(--danger-ink);
+  --color-paid: var(--paid);
+  --color-pending: var(--pending);
+  --color-draft: var(--draft);
+  --color-draft-tint: var(--draft-tint);
+
+  --color-accent: #795afa;
+  --color-accent-strong: #6a45f5;
+  --color-accent-soft: #9277ff;
+  --color-danger: #e62525;
+  --color-danger-strong: #c41b1b;
+  --color-graphite: #0c0e16;
+  --color-divider: #494e6e;
+  --color-paid-tint: #33d69f0f;
+  --color-pending-tint: #ff8f000f;
+  --color-scrim: #00000080;
+
+  --text-display: 2.25rem;
+  --text-display--line-height: 2.0625rem;
+  --text-display--letter-spacing: -0.03125em;
+  --text-heading: 1.5rem;
+  --text-heading--line-height: 1.375rem;
+  --text-heading--letter-spacing: -0.03125em;
+  --text-title: 1.5rem;
+  --text-title--line-height: 2rem;
+  --text-title--letter-spacing: -0.02083em;
+  --text-section: 1.125rem;
+  --text-section--line-height: 2rem;
+  --text-section--letter-spacing: -0.02083em;
+  --text-body: 0.9375rem;
+  --text-body--line-height: 0.9375rem;
+  --text-body--letter-spacing: -0.01667em;
+  --text-meta: 0.8125rem;
+  --text-meta--line-height: 1.125rem;
+  --text-meta--letter-spacing: -0.00769em;
+
+  --radius-field: 0.25rem;
+  --radius-chip: 0.375rem;
+  --radius-card: 0.5rem;
+  --radius-rail: 1.25rem;
+  --radius-pill: 1.5rem;
+
+  --shadow-card: 0 10px 10px -10px #48549f1a;
+  --shadow-popover: var(--popover-shadow);
+
+  --container-content: 45.625rem;
+  --container-drawer: 38.5rem;
+  --container-table: 39.625rem;
+
   --font-sans: var(--font-league-spartan), ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {
   html {
-    @apply font-sans;
+    @apply text-body font-sans;
     color-scheme: light;
     overflow-y: scroll;
   }
   html.dark {
     color-scheme: dark;
   }
+  body {
+    @apply bg-canvas text-muted;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply text-ink font-bold;
+  }
   button:not(:disabled) {
     cursor: pointer;
+  }
+  :focus-visible {
+    @apply outline-accent-ink outline-2 outline-offset-2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
