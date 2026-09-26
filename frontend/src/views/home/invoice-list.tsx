@@ -21,21 +21,23 @@ export default function InvoiceList({ invoices }: { invoices: Invoice[] }) {
     );
 
   return (
-    <>
-      <ListHeader
-        count={visible.length}
-        statuses={statuses}
-        onToggle={toggle}
-      />
-      {visible.length ? (
-        <ul className="mt-8 space-y-4 md:mt-13.75 lg:mt-16">
-          {visible.map((invoice) => (
-            <InvoiceRow key={invoice.id} invoice={invoice} />
-          ))}
-        </ul>
-      ) : (
-        <EmptyState />
-      )}
-    </>
+    <main className="flex flex-1 flex-col px-6 pt-8 md:px-12 md:pt-15.25 lg:pt-19.25">
+      <div className="max-w-content mx-auto flex w-full flex-1 flex-col">
+        <ListHeader
+          count={visible.length}
+          statuses={statuses}
+          onToggle={toggle}
+        />
+        {visible.length ? (
+          <ul className="mt-8 space-y-4 md:mt-13.75 lg:mt-16">
+            {visible.map((invoice) => (
+              <InvoiceRow key={invoice.id} invoice={invoice} />
+            ))}
+          </ul>
+        ) : (
+          <EmptyState />
+        )}
+      </div>
+    </main>
   );
 }

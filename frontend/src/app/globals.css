@@ -92,7 +92,7 @@ html.dark {
 
   --text-display: 2.25rem;
   --text-display--line-height: 2.0625rem;
-  --text-display--letter-spacing: -0.02778em;
+  --text-display--letter-spacing: -0.03125em;
   --text-heading: 1.5rem;
   --text-heading--line-height: 1.375rem;
   --text-heading--letter-spacing: -0.03125em;
@@ -108,6 +108,9 @@ html.dark {
   --text-amount: 0.9375rem;
   --text-amount--line-height: 1.5rem;
   --text-amount--letter-spacing: -0.01667em;
+  --text-field: 0.9375rem;
+  --text-field--line-height: 1.25rem;
+  --text-field--letter-spacing: -0.01667em;
   --text-meta: 0.8125rem;
   --text-meta--line-height: 0.9375rem;
   --text-meta--letter-spacing: -0.01923em;
