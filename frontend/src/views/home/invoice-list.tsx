@@ -1,12 +1,14 @@
 "use client";
 
-import type { Invoice, InvoiceStatus } from "@/data";
+import type { InvoiceStatus } from "@/data";
+import { useInvoices } from "@/store";
 import { useState } from "react";
 import EmptyState from "./empty-state";
 import InvoiceRow from "./invoice-row";
 import ListHeader from "./list-header";
 
-export default function InvoiceList({ invoices }: { invoices: Invoice[] }) {
+export default function InvoiceList() {
+  const invoices = useInvoices();
   const [statuses, setStatuses] = useState<InvoiceStatus[]>([]);
 
   const visible = statuses.length

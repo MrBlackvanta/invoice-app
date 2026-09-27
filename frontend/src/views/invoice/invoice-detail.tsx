@@ -19,10 +19,13 @@ export default function InvoiceDetail({ invoice }: { invoice: Invoice }) {
         <div className="bg-surface shadow-card rounded-card mt-7.75 flex h-22.75 items-center px-6 md:h-22 md:px-8">
           <span className="text-meta">Status</span>
           <StatusChip status={invoice.status} className="ml-auto md:ml-5" />
-          <InvoiceActions className="ml-auto hidden md:flex" />
+          <InvoiceActions id={invoice.id} className="ml-auto hidden md:flex" />
         </div>
         <InvoiceSummary invoice={invoice} />
-        <InvoiceActions className="bg-surface shadow-card -mx-6 mt-14 flex h-22.75 px-6 md:hidden" />
+        <InvoiceActions
+          id={invoice.id}
+          className="bg-surface shadow-card -mx-6 mt-14 flex h-22.75 px-6 md:hidden"
+        />
       </div>
     </main>
   );

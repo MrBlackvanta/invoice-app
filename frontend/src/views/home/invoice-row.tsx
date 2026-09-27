@@ -16,7 +16,7 @@ export default function InvoiceRow({ invoice }: { invoice: Invoice }) {
           {invoice.id}
         </span>
         <span className="text-meta text-muted col-start-1 row-start-2 pb-2.25 md:w-35.75 md:pb-0 lg:w-37.75">
-          Due {formatDay(invoice.paymentDue)}
+          {invoice.paymentDue && `Due ${formatDay(invoice.paymentDue)}`}
         </span>
         <span className="text-meta text-client col-start-2 row-start-1 truncate text-right md:min-w-0 md:flex-1 md:text-left">
           {invoice.clientName}

@@ -19,6 +19,9 @@
   --edge: #dfe3fa;
   --popover: #ffffff;
   --control: #dfe3fa;
+  --drawer: #ffffff;
+  --field-edge: #7e88c3;
+  --subhead: #6e768f;
   --on-rail: #7e88c3;
   --on-raised: #dfe3fa;
   --accent-ink: #795afa;
@@ -45,6 +48,9 @@ html.dark {
   --edge: #252945;
   --popover: #252945;
   --control: #1e2139;
+  --drawer: #141625;
+  --field-edge: #6068a9;
+  --subhead: #777f98;
   --on-rail: #858bb2;
   --accent-ink: #a08cff;
   --danger-ink: #ff9797;
@@ -68,6 +74,9 @@ html.dark {
   --color-client: var(--client);
   --color-hash: var(--hash);
   --color-edge: var(--edge);
+  --color-drawer: var(--drawer);
+  --color-field-edge: var(--field-edge);
+  --color-subhead: var(--subhead);
   --color-popover: var(--popover);
   --color-control: var(--control);
   --color-on-rail: var(--on-rail);
@@ -85,6 +94,8 @@ html.dark {
   --color-danger: #e62525;
   --color-danger-strong: #c41b1b;
   --color-graphite: #0c0e16;
+  --color-slate: #373b53;
+  --color-slate-ink: #a0a5c0;
   --color-divider: #494e6e;
   --color-paid-tint: #33d69f0f;
   --color-pending-tint: #ff8f000f;
@@ -113,10 +124,13 @@ html.dark {
   --text-field--letter-spacing: -0.01667em;
   --text-meta: 0.8125rem;
   --text-meta--line-height: 0.9375rem;
-  --text-meta--letter-spacing: -0.01923em;
+  --text-meta--letter-spacing: -0.00769em;
   --text-prose: 0.8125rem;
   --text-prose--line-height: 1.125rem;
   --text-prose--letter-spacing: -0.00769em;
+  --text-note: 0.625rem;
+  --text-note--line-height: 0.9375rem;
+  --text-note--letter-spacing: -0.02083em;
 
   --radius-field: 0.25rem;
   --radius-chip: 0.375rem;
@@ -132,6 +146,14 @@ html.dark {
   --container-table: 39.625rem;
 
   --font-sans: var(--font-league-spartan), ui-sans-serif, system-ui, sans-serif;
+}
+
+@utility v-no-scrollbar {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @layer base {
@@ -156,6 +178,12 @@ html.dark {
   }
   :focus-visible {
     @apply outline-accent-ink outline-2 outline-offset-2;
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    position: absolute;
+    inset: 0;
+    cursor: pointer;
+    opacity: 0;
   }
 }
 

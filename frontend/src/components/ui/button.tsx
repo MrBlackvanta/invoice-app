@@ -3,6 +3,7 @@ import type { ComponentProps } from "react";
 const tone = {
   primary: "bg-accent hover:bg-accent-strong text-white",
   secondary: "bg-sunken hover:bg-sunken-hover text-muted hover:text-graphite",
+  draft: "bg-slate hover:bg-graphite text-slate-ink",
   danger: "bg-danger hover:bg-danger-strong text-white",
 };
 
