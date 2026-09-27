@@ -1,11 +1,14 @@
 import { Button } from "@/components/ui";
+import { markInvoicePaid } from "@/store";
 import { useRouter } from "next/navigation";
 
 export default function InvoiceActions({
   id,
+  onDelete,
   className,
 }: {
   id: string;
+  onDelete: () => void;
   className?: string;
 }) {
   const router = useRouter();
@@ -18,8 +21,15 @@ export default function InvoiceActions({
       >
         Edit
       </Button>
-      <Button variant="danger">Delete</Button>
-      <Button className="flex-1 md:flex-none">Mark as Paid</Button>
+      <Button variant="danger" onClick={onDelete}>
+        Delete
+      </Button>
+      <Button
+        onClick={() => markInvoicePaid(id)}
+        className="flex-1 md:flex-none"
+      >
+        Mark as Paid
+      </Button>
     </div>
   );
 }

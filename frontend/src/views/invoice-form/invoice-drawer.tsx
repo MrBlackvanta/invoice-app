@@ -5,7 +5,7 @@ import { Button } from "@/components/ui";
 import type { Invoice } from "@/data";
 import { createInvoiceId } from "@/lib";
 import { saveInvoice } from "@/store";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type SubmitEvent } from "react";
 import { toDraft, toInvoice, type Draft } from "./draft";
 import InvoiceFields from "./invoice-fields";
 import { findMissing, focusFirstMissing, NOTHING_MISSING } from "./validate";
@@ -36,7 +36,7 @@ export default function InvoiceDrawer({
     close();
   };
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     const problems = findMissing(draft);
 
@@ -63,12 +63,12 @@ export default function InvoiceDrawer({
         if (event.target === event.currentTarget) close();
       }}
       aria-labelledby={TITLE_ID}
-      className="bg-scrim fixed inset-0 top-18 m-0 h-auto max-h-none w-auto max-w-none p-0 backdrop:bg-transparent md:top-20 lg:top-0 lg:left-25.75"
+      className="bg-scrim v-enter-fade fixed inset-0 top-18 m-0 h-auto max-h-none w-auto max-w-none p-0 backdrop:bg-transparent md:top-20 lg:top-0 lg:left-25.75"
     >
       <form
         noValidate
         onSubmit={submit}
-        className="bg-drawer md:max-w-drawer md:rounded-r-rail absolute inset-y-0 left-0 flex w-full flex-col overflow-hidden"
+        className="bg-drawer md:max-w-drawer md:rounded-r-rail v-enter-slide absolute inset-y-0 left-0 flex w-full flex-col overflow-hidden"
       >
         <div className="v-no-scrollbar flex-1 overflow-y-auto overscroll-contain px-6 pt-8.25 pb-8 md:px-14 md:pt-14.75 md:pb-0">
           <button
