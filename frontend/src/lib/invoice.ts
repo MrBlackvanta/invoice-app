@@ -1,23 +1,30 @@
-const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+export type InvoiceStatus = "draft" | "pending" | "paid";
 
-const randomLetter = () => LETTERS[Math.floor(Math.random() * LETTERS.length)];
-
-export const createInvoiceId = () =>
-  randomLetter() +
-  randomLetter() +
-  Math.floor(Math.random() * 10000)
-    .toString()
-    .padStart(4, "0");
-
-export const todayIso = () => {
-  const now = new Date();
-  const month = `${now.getMonth() + 1}`.padStart(2, "0");
-  const day = `${now.getDate()}`.padStart(2, "0");
-  return `${now.getFullYear()}-${month}-${day}`;
+export type Address = {
+  street: string;
+  city: string;
+  postCode: string;
+  country: string;
 };
 
-export const addDays = (isoDate: string, days: number) => {
-  const date = new Date(`${isoDate}T00:00:00Z`);
-  date.setUTCDate(date.getUTCDate() + days);
-  return date.toISOString().slice(0, 10);
+export type InvoiceItem = {
+  name: string;
+  quantity: number;
+  price: number;
+  total: number;
+};
+
+export type Invoice = {
+  id: string;
+  createdAt: string;
+  paymentDue: string;
+  description: string;
+  paymentTerms: number;
+  clientName: string;
+  clientEmail: string;
+  status: InvoiceStatus;
+  senderAddress: Address;
+  clientAddress: Address;
+  items: InvoiceItem[];
+  total: number;
 };

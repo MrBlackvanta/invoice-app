@@ -1,5 +1,4 @@
-import type { Invoice } from "@/data";
-import { formatDay } from "@/lib";
+import { formatDay, type Invoice } from "@/lib";
 import AddressBlock from "./address-block";
 import Field from "./field";
 import InvoiceItems from "./invoice-items";

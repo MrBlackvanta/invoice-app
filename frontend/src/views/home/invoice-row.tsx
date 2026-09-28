@@ -1,7 +1,6 @@
 import { ArrowRightIcon } from "@/components/icons";
 import { StatusChip } from "@/components/ui";
-import type { Invoice } from "@/data";
-import { formatAmount, formatDay } from "@/lib";
+import { formatAmount, formatDay, type Invoice } from "@/lib";
 import Link from "next/link";
 
 export default function InvoiceRow({ invoice }: { invoice: Invoice }) {

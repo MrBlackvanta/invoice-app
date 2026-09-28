@@ -261,6 +261,16 @@ html.dark {
   }
 }
 
+@utility v-skeleton {
+  animation: v-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes v-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
 @layer base {
   html {
     @apply text-body font-sans font-medium;

@@ -1,5 +1,4 @@
-import type { InvoiceItem } from "@/data";
-import { formatAmount } from "@/lib";
+import { formatAmount, type InvoiceItem } from "@/lib";
 
 export default function InvoiceItems({
   items,

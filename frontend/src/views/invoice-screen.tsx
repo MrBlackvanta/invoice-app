@@ -1,10 +1,11 @@
 "use client";
 
-import { useInvoices } from "@/store";
+import { dismissFailure, useInvoices } from "@/store";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
+import FailureToast from "./failure-toast";
 import { InvoiceList } from "./home";
-import { InvoiceDetail } from "./invoice";
+import { DetailSkeleton, InvoiceDetail, InvoiceMissing } from "./invoice";
 import { InvoiceDrawer } from "./invoice-form";
 
 function useRouterSyncedToQuery() {
@@ -18,23 +19,35 @@ function useRouterSyncedToQuery() {
 }
 
 export default function InvoiceScreen() {
-  const invoices = useInvoices();
+  const { invoices, loading, failure } = useInvoices();
   const params = useSearchParams();
   const router = useRouterSyncedToQuery();
 
-  const invoice = invoices.find(({ id }) => id === params.get("invoice"));
+  const wanted = params.get("invoice");
+  const invoice = invoices.find(({ id }) => id === wanted);
   const editing = params.has("edit") && invoice;
   const closeDrawer = () =>
     router.push(invoice ? `/?invoice=${invoice.id}` : "/");
 
+  const view = () => {
+    if (!wanted) return <InvoiceList />;
+    if (loading) return <DetailSkeleton />;
+    if (!invoice) return <InvoiceMissing />;
+
+    return <InvoiceDetail invoice={invoice} />;
+  };
+
   return (
     <>
-      {invoice ? <InvoiceDetail invoice={invoice} /> : <InvoiceList />}
+      {view()}
       {(params.has("new") || editing) && (
         <InvoiceDrawer
           invoice={editing ? invoice : undefined}
           onClose={closeDrawer}
         />
+      )}
+      {failure && invoices.length > 0 && (
+        <FailureToast message={failure} onDismiss={dismissFailure} />
       )}
     </>
   );

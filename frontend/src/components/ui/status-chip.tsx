@@ -1,4 +1,4 @@
-import type { InvoiceStatus } from "@/data";
+import type { InvoiceStatus } from "@/lib";
 import type { ComponentProps } from "react";
 
 const tone: Record<InvoiceStatus, string> = {

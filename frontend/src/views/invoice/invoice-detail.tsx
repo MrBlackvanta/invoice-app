@@ -1,6 +1,6 @@
 import { ArrowLeftIcon } from "@/components/icons";
 import { StatusChip } from "@/components/ui";
-import type { Invoice } from "@/data";
+import type { Invoice } from "@/lib";
 import { deleteInvoice } from "@/store";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

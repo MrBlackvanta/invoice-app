@@ -19,26 +19,43 @@ const ITEM_FIELDS = ["name", "quantity", "price"] as const;
 
 export const ADD_ITEM = "addItem";
 
-export const NOTHING_MISSING: string[] = [];
+export const NO_PROBLEMS = { fields: [], missing: false, malformed: false };
 
 export const itemFieldName = (index: number, field: string) =>
   `items.${index}.${field}`;
 
-export const findMissing = (draft: Draft) => {
-  const missing: string[] = REQUIRED.filter((name) => !draft[name].trim());
+const isWholeNumber = (value: string) => /^\d+$/.test(value);
+
+const isAmount = (value: string) => /^\d+(\.\d+)?$/.test(value);
+
+export const findProblems = (draft: Draft) => {
+  const empty: string[] = REQUIRED.filter((name) => !draft[name].trim());
+  const malformed: string[] = [];
 
   draft.items.forEach((item, index) => {
     ITEM_FIELDS.forEach((field) => {
-      if (!item[field].trim()) missing.push(itemFieldName(index, field));
+      if (!item[field].trim()) empty.push(itemFieldName(index, field));
     });
+
+    if (item.quantity.trim() && !isWholeNumber(item.quantity.trim())) {
+      malformed.push(itemFieldName(index, "quantity"));
+    }
+
+    if (item.price.trim() && !isAmount(item.price.trim())) {
+      malformed.push(itemFieldName(index, "price"));
+    }
   });
 
-  if (!draft.items.length) missing.push(ADD_ITEM);
+  if (!draft.items.length) empty.push(ADD_ITEM);
 
-  return missing;
+  return {
+    fields: [...empty, ...malformed],
+    missing: empty.length > 0,
+    malformed: malformed.length > 0,
+  };
 };
 
-export const focusFirstMissing = (form: HTMLFormElement, missing: string[]) => {
-  const control = form.elements.namedItem(missing[0]);
+export const focusFirstProblem = (form: HTMLFormElement, fields: string[]) => {
+  const control = form.elements.namedItem(fields[0]);
   if (control instanceof HTMLElement) control.focus({ preventScroll: true });
 };

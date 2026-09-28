@@ -14,17 +14,17 @@ const terms = PAYMENT_TERMS.map((days) => ({
 
 export default function InvoiceFields({
   draft,
-  missing,
+  problems,
   describedBy,
   onChange,
 }: {
   draft: Draft;
-  missing: string[];
+  problems: string[];
   describedBy: string;
   onChange: (patch: Partial<Draft>) => void;
 }) {
   const fieldProps = (name: TextKey) => {
-    const invalid = missing.includes(name);
+    const invalid = problems.includes(name);
 
     return {
       name,
@@ -110,9 +110,9 @@ export default function InvoiceFields({
             label="Invoice Date"
             name="createdAt"
             value={draft.createdAt}
-            invalid={missing.includes("createdAt")}
+            invalid={problems.includes("createdAt")}
             aria-describedby={
-              missing.includes("createdAt") ? describedBy : undefined
+              problems.includes("createdAt") ? describedBy : undefined
             }
             onChange={(createdAt) => onChange({ createdAt })}
           />
@@ -129,7 +129,7 @@ export default function InvoiceFields({
 
       <ItemRows
         items={draft.items}
-        missing={missing}
+        problems={problems}
         describedBy={describedBy}
         onChange={changeItem}
         onRemove={(key) =>

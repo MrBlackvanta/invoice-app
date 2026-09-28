@@ -1,4 +1,4 @@
-import type { Address } from "@/data";
+import type { Address } from "@/lib";
 
 export default function AddressBlock({
   address,

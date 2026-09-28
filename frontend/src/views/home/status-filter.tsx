@@ -2,7 +2,7 @@
 
 import { ArrowDownIcon, CheckIcon } from "@/components/icons";
 import { usePopover } from "@/components/ui";
-import type { InvoiceStatus } from "@/data";
+import type { InvoiceStatus } from "@/lib";
 
 const options: { value: InvoiceStatus; label: string }[] = [
   { value: "draft", label: "Draft" },

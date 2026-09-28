@@ -2,13 +2,12 @@
 
 import { ArrowLeftIcon } from "@/components/icons";
 import { Button, Modal } from "@/components/ui";
-import type { Invoice } from "@/data";
-import { bringIntoView, createInvoiceId } from "@/lib";
-import { saveInvoice } from "@/store";
+import { bringIntoView, type Invoice, type InvoiceStatus } from "@/lib";
+import { addInvoice, editInvoice } from "@/store";
 import { useRef, useState, type SubmitEvent } from "react";
-import { toDraft, toInvoice, type Draft } from "./draft";
+import { toDraft, toPayload, type Draft } from "./draft";
 import InvoiceFields from "./invoice-fields";
-import { findMissing, focusFirstMissing, NOTHING_MISSING } from "./validate";
+import { findProblems, focusFirstProblem, NO_PROBLEMS } from "./validate";
 
 const TITLE_ID = "invoice-form-title";
 const ERROR_ID = "invoice-form-error";
@@ -22,16 +21,23 @@ export default function InvoiceDrawer({
 }) {
   const [draft, setDraft] = useState(() => toDraft(invoice));
   const [attempts, setAttempts] = useState(0);
+  const [pending, setPending] = useState<InvoiceStatus | null>(null);
+  const [failed, setFailed] = useState(false);
   const alert = useRef<HTMLDivElement>(null);
 
-  const missing = attempts > 0 ? findMissing(draft) : NOTHING_MISSING;
+  const problems = attempts > 0 ? findProblems(draft) : NO_PROBLEMS;
+  const sendStatus = invoice?.status === "paid" ? "paid" : "pending";
+  const busy = pending !== null;
+
+  const label = (status: InvoiceStatus, text: string) =>
+    pending === status ? "Saving…" : text;
 
   const change = (patch: Partial<Draft>) =>
     setDraft((current) => ({ ...current, ...patch }));
 
-  const reject = (form: HTMLFormElement, problems: string[]) => {
+  const reject = (form: HTMLFormElement, fields: string[]) => {
     setAttempts((count) => count + 1);
-    focusFirstMissing(form, problems);
+    focusFirstProblem(form, fields);
     requestAnimationFrame(() => bringIntoView(alert.current));
   };
 
@@ -42,21 +48,39 @@ export default function InvoiceDrawer({
       className="bg-scrim fixed inset-0 top-18 m-0 h-auto max-h-none w-auto max-w-none p-0 backdrop:bg-transparent md:top-20 lg:top-0 lg:left-25.75"
     >
       {(close) => {
-        const save = (id: string, status: Invoice["status"]) => {
-          saveInvoice(toInvoice(draft, id, status));
-          close();
+        const save = async (status: InvoiceStatus) => {
+          setPending(status);
+          setFailed(false);
+
+          const payload = toPayload(draft, status);
+          const saved = invoice
+            ? await editInvoice(invoice.id, payload)
+            : await addInvoice(payload);
+
+          if (saved) return close();
+
+          setPending(null);
+          setFailed(true);
+          requestAnimationFrame(() => bringIntoView(alert.current));
         };
 
         const submit = (event: SubmitEvent<HTMLFormElement>) => {
           event.preventDefault();
-          const problems = findMissing(draft);
+          const found = findProblems(draft);
 
-          if (problems.length > 0) return reject(event.currentTarget, problems);
+          if (found.fields.length > 0) {
+            return reject(event.currentTarget, found.fields);
+          }
 
-          save(
-            invoice?.id ?? createInvoiceId(),
-            invoice?.status === "paid" ? "paid" : "pending",
-          );
+          void save(sendStatus);
+        };
+
+        const saveDraft = (form: HTMLFormElement | null) => {
+          const found = findProblems(draft);
+
+          if (form && found.malformed) return reject(form, found.fields);
+
+          void save("draft");
         };
 
         return (
@@ -80,19 +104,36 @@ export default function InvoiceDrawer({
 
               <InvoiceFields
                 draft={draft}
-                missing={missing}
+                problems={problems.fields}
                 describedBy={ERROR_ID}
                 onChange={change}
               />
 
-              <div ref={alert} role="alert" className="bg-drawer relative z-10">
-                {missing.length > 0 && (
+              <div
+                ref={alert}
+                id={ERROR_ID}
+                role="alert"
+                className="bg-drawer relative z-10"
+              >
+                {problems.missing && (
                   <p
                     key={attempts}
-                    id={ERROR_ID}
                     className="text-note text-danger-ink mt-8.5 font-bold"
                   >
                     - All fields must be added
+                  </p>
+                )}
+                {problems.malformed && (
+                  <p
+                    key={`malformed-${attempts}`}
+                    className="text-note text-danger-ink mt-8.5 font-bold"
+                  >
+                    - Quantity must be a whole number and price an amount
+                  </p>
+                )}
+                {failed && (
+                  <p className="text-note text-danger-ink mt-8.5 font-bold">
+                    - Couldn’t reach the invoice service. Try again in a moment.
                   </p>
                 )}
               </div>
@@ -104,26 +145,32 @@ export default function InvoiceDrawer({
                 <>
                   <Button
                     variant="secondary"
+                    disabled={busy}
                     onClick={close}
                     className="ml-auto"
                   >
                     Cancel
                   </Button>
-                  <Button type="submit">Save Changes</Button>
+                  <Button type="submit" disabled={busy}>
+                    {label(sendStatus, "Save Changes")}
+                  </Button>
                 </>
               ) : (
                 <>
-                  <Button variant="secondary" onClick={close}>
+                  <Button variant="secondary" disabled={busy} onClick={close}>
                     Discard
                   </Button>
                   <Button
                     variant="draft"
-                    onClick={() => save(createInvoiceId(), "draft")}
+                    disabled={busy}
+                    onClick={(event) => saveDraft(event.currentTarget.form)}
                     className="md:ml-auto"
                   >
-                    Save as Draft
+                    {label("draft", "Save as Draft")}
                   </Button>
-                  <Button type="submit">Save &amp; Send</Button>
+                  <Button type="submit" disabled={busy}>
+                    {label(sendStatus, "Save & Send")}
+                  </Button>
                 </>
               )}
             </div>

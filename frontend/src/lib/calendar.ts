@@ -28,6 +28,8 @@ const pad = (value: number) => `${value}`.padStart(2, "0");
 export const toIso = (date: Date) =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
+export const todayIso = () => toIso(new Date());
+
 export const fromIso = (iso: string) => {
   const [year, month, day] = iso.split("-").map(Number);
   return new Date(year, month - 1, day);

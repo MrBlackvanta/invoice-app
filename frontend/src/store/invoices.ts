@@ -1,84 +1,121 @@
 "use client";
 
-import { invoices as seed, type Invoice } from "@/data";
+import * as api from "@/api";
+import type { Invoice } from "@/lib";
 import { useSyncExternalStore } from "react";
 
-const STORAGE_KEY = "invoice-app:invoices";
+type InvoiceStore = {
+  invoices: Invoice[];
+  loading: boolean;
+  failure: string | null;
+};
 
-let invoices = seed;
-let restored = false;
-let persisting = true;
+const LOAD_FAILED = "We couldn’t load your invoices.";
+const CHANGE_FAILED = "That change didn’t save.";
+
+const INITIAL: InvoiceStore = { invoices: [], loading: true, failure: null };
+
+let store = INITIAL;
+let started = false;
 const listeners = new Set<() => void>();
 
-function readStored(): Invoice[] | null {
+function publish(next: InvoiceStore) {
+  store = next;
+  listeners.forEach((listener) => listener());
+}
+
+const loaded = (invoices: Invoice[]): InvoiceStore => ({
+  invoices,
+  loading: false,
+  failure: null,
+});
+
+async function load() {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    const parsed: unknown = saved && JSON.parse(saved);
-    return Array.isArray(parsed) ? parsed : null;
+    publish(loaded(await api.listInvoices()));
   } catch {
-    return null;
+    publish({ ...store, loading: false, failure: LOAD_FAILED });
   }
 }
 
-function restoreOnce() {
-  if (restored) return;
-  restored = true;
-
-  const saved = readStored();
-  if (saved) invoices = saved;
+async function send(request: () => Promise<unknown>) {
+  await request();
+  publish(loaded(await api.listInvoices()));
 }
 
-function persist() {
-  if (!persisting) return;
+async function showImmediately(
+  invoices: Invoice[],
+  request: () => Promise<unknown>,
+) {
+  const rollback = store;
+
+  publish({ ...store, invoices, failure: null });
 
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(invoices));
+    await send(request);
   } catch {
-    persisting = false;
+    publish({ ...rollback, failure: CHANGE_FAILED });
   }
 }
 
 function subscribe(listener: () => void) {
-  restoreOnce();
   listeners.add(listener);
+
+  if (!started) {
+    started = true;
+    void load();
+  }
+
   return () => {
     listeners.delete(listener);
   };
 }
 
-function publish() {
-  persist();
-  listeners.forEach((listener) => listener());
-}
-
 export function useInvoices() {
   return useSyncExternalStore(
     subscribe,
-    () => invoices,
-    () => seed,
+    () => store,
+    () => INITIAL,
   );
 }
 
-export function saveInvoice(invoice: Invoice) {
-  const known = invoices.some(({ id }) => id === invoice.id);
+export function reloadInvoices() {
+  publish({ ...store, loading: true, failure: null });
+  void load();
+}
 
-  invoices = known
-    ? invoices.map((current) => (current.id === invoice.id ? invoice : current))
-    : [...invoices, invoice];
+export function dismissFailure() {
+  publish({ ...store, failure: null });
+}
 
-  publish();
+export async function addInvoice(payload: api.InvoicePayload) {
+  try {
+    await send(() => api.createInvoice(payload));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function editInvoice(id: string, payload: api.InvoicePayload) {
+  try {
+    await send(() => api.replaceInvoice(id, payload));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function markInvoicePaid(id: string) {
-  invoices = invoices.map((invoice) =>
-    invoice.id === id ? { ...invoice, status: "paid" } : invoice,
+  const paid = store.invoices.map((invoice) =>
+    invoice.id === id ? { ...invoice, status: "paid" as const } : invoice,
   );
 
-  publish();
+  void showImmediately(paid, () => api.changeInvoiceStatus(id, "paid"));
 }
 
 export function deleteInvoice(id: string) {
-  invoices = invoices.filter((invoice) => invoice.id !== id);
+  const remaining = store.invoices.filter((invoice) => invoice.id !== id);
 
-  publish();
+  void showImmediately(remaining, () => api.deleteInvoice(id));
 }

@@ -1,5 +1,7 @@
-import type { Invoice, InvoiceStatus } from "@/data";
-import { addDays, todayIso } from "@/lib";
+import type { InvoicePayload } from "@/api";
+import { todayIso, type Invoice, type InvoiceStatus } from "@/lib";
+
+export type ItemField = "name" | "quantity" | "price";
 
 export type DraftItem = {
   key: string;
@@ -65,42 +67,31 @@ export const toDraft = (invoice?: Invoice): Draft => ({
 export const itemTotal = ({ quantity, price }: DraftItem) =>
   (Number(quantity) || 0) * (Number(price) || 0);
 
-export const toInvoice = (
+export const toPayload = (
   draft: Draft,
-  id: string,
   status: InvoiceStatus,
-): Invoice => {
-  const items = draft.items.map((item) => ({
-    name: item.name,
-    quantity: Number(item.quantity) || 0,
-    price: Number(item.price) || 0,
-    total: itemTotal(item),
-  }));
-
-  return {
-    id,
-    createdAt: draft.createdAt,
-    paymentDue: draft.createdAt
-      ? addDays(draft.createdAt, draft.paymentTerms)
-      : "",
-    description: draft.description,
-    paymentTerms: draft.paymentTerms,
-    clientName: draft.clientName,
-    clientEmail: draft.clientEmail,
-    status,
-    senderAddress: {
-      street: draft.senderStreet,
-      city: draft.senderCity,
-      postCode: draft.senderPostCode,
-      country: draft.senderCountry,
-    },
-    clientAddress: {
-      street: draft.clientStreet,
-      city: draft.clientCity,
-      postCode: draft.clientPostCode,
-      country: draft.clientCountry,
-    },
-    items,
-    total: items.reduce((sum, item) => sum + item.total, 0),
-  };
-};
+): InvoicePayload => ({
+  createdAt: draft.createdAt,
+  paymentTerms: draft.paymentTerms,
+  status,
+  description: draft.description,
+  clientName: draft.clientName,
+  clientEmail: draft.clientEmail,
+  senderAddress: {
+    street: draft.senderStreet,
+    city: draft.senderCity,
+    postCode: draft.senderPostCode,
+    country: draft.senderCountry,
+  },
+  clientAddress: {
+    street: draft.clientStreet,
+    city: draft.clientCity,
+    postCode: draft.clientPostCode,
+    country: draft.clientCountry,
+  },
+  items: draft.items.map(({ name, quantity, price }) => ({
+    name,
+    quantity: Number(quantity) || 0,
+    price: Number(price) || 0,
+  })),
+});

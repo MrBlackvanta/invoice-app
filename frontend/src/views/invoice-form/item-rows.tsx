@@ -4,7 +4,7 @@ import { DeleteIcon } from "@/components/icons";
 import { Button, TextField } from "@/components/ui";
 import { afterMotion, formatDecimal } from "@/lib";
 import { useState, type MouseEvent } from "react";
-import { itemTotal, type DraftItem } from "./draft";
+import { itemTotal, type DraftItem, type ItemField } from "./draft";
 import { ADD_ITEM, itemFieldName } from "./validate";
 
 const HEADINGS = [
@@ -16,14 +16,14 @@ const HEADINGS = [
 
 export default function ItemRows({
   items,
-  missing,
+  problems,
   describedBy,
   onChange,
   onRemove,
   onAdd,
 }: {
   items: DraftItem[];
-  missing: string[];
+  problems: string[];
   describedBy: string;
   onChange: (index: number, patch: Partial<DraftItem>) => void;
   onRemove: (key: string) => void;
@@ -32,9 +32,9 @@ export default function ItemRows({
   const [leaving, setLeaving] = useState<string[]>([]);
   const [mounted] = useState(() => new Set(items.map((item) => item.key)));
 
-  const fieldProps = (index: number, field: "name" | "quantity" | "price") => {
+  const fieldProps = (index: number, field: ItemField) => {
     const name = itemFieldName(index, field);
-    const invalid = missing.includes(name);
+    const invalid = problems.includes(name);
 
     return {
       name,

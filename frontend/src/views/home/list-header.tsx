@@ -1,8 +1,14 @@
-import type { InvoiceStatus } from "@/data";
+import type { InvoiceStatus } from "@/lib";
 import NewInvoiceButton from "./new-invoice-button";
 import StatusFilter from "./status-filter";
 
-function countLabels(count: number, statuses: InvoiceStatus[]) {
+export type Count = number | "loading" | "unavailable";
+
+function countLabels(count: Count, statuses: InvoiceStatus[]) {
+  if (count === "loading")
+    return { short: "Loading", long: "Loading your invoices" };
+  if (count === "unavailable")
+    return { short: "Unavailable", long: "Invoices unavailable" };
   if (count === 0) return { short: "No invoices", long: "No invoices" };
 
   const scope = statuses.length === 1 ? ` ${statuses[0]}` : "";
@@ -20,7 +26,7 @@ export default function ListHeader({
   statuses,
   onToggle,
 }: {
-  count: number;
+  count: Count;
   statuses: InvoiceStatus[];
   onToggle: (status: InvoiceStatus) => void;
 }) {
@@ -28,7 +34,7 @@ export default function ListHeader({
 
   return (
     <div className="flex items-end justify-between md:items-start">
-      <div className="md:mt-0.25">
+      <div className="md:mt-px">
         <h1 className="text-heading md:text-display">Invoices</h1>
         <p className="text-meta mt-0.75 md:mt-1.5">
           <span className="md:hidden">{short}</span>

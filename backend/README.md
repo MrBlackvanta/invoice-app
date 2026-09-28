@@ -90,7 +90,9 @@ collides.
 Validation depends on the status, because the form does. A draft may be empty — that is what
 "Save as Draft" means with nothing filled in — while `pending` and `paid` require every field
 the form marks required and at least one named item. The same rules run on `PATCH .../status`,
-so an empty draft cannot be promoted to pending through the side door.
+so an empty draft cannot be promoted to pending through the side door. Quantities are whole
+numbers and amounts are never negative; the form refuses both before sending, and these rules
+are what holds when the form is not the caller.
 
 The list is ordered by invoice date, newest first, so a new invoice arrives where it is looked
 for. Dates tie constantly — several invoices in one day is the ordinary case — and a tie is
