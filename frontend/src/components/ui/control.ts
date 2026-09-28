@@ -1,5 +1,5 @@
 export const control =
-  "text-body text-ink bg-surface rounded-field block h-12 w-full border px-5 font-bold transition-colors";
+  "text-body text-ink bg-surface rounded-field v-ink-center block h-12 w-full border px-5 font-bold transition-colors";
 
 export const controlEdge = (invalid?: boolean) =>
   invalid

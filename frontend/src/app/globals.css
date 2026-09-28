@@ -160,27 +160,104 @@ html.dark {
   }
 }
 
-@utility v-enter-fade {
-  transition: opacity 200ms ease-out;
+@utility v-ink-center {
+  padding-block-start: 0.2em;
+}
+
+@utility v-modal {
+  opacity: 0;
+  transition-property: opacity, display, overlay;
+  transition-duration: 250ms;
+  transition-timing-function: ease-out;
+  transition-behavior: allow-discrete;
 
   &::backdrop {
-    transition: opacity 200ms ease-out;
+    opacity: 0;
+    transition-property: opacity, display, overlay;
+    transition-duration: 250ms;
+    transition-timing-function: ease-out;
+    transition-behavior: allow-discrete;
+  }
+
+  &[open],
+  &[open]::backdrop {
+    opacity: 1;
   }
 
   @starting-style {
-    opacity: 0;
-
-    &::backdrop {
+    &[open],
+    &[open]::backdrop {
       opacity: 0;
     }
   }
 }
 
-@utility v-enter-slide {
+@utility v-drawer {
+  translate: -100%;
   transition: translate 250ms ease-out;
 
+  [open] > & {
+    translate: 0;
+  }
+
   @starting-style {
-    translate: -100%;
+    [open] > & {
+      translate: -100%;
+    }
+  }
+}
+
+@utility v-menu {
+  display: none;
+  opacity: 0;
+  transform: translateY(-0.5rem);
+  transition-property: opacity, transform, display;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+  transition-behavior: allow-discrete;
+
+  &[data-open] {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @starting-style {
+    &[data-open] {
+      opacity: 0;
+      transform: translateY(-0.5rem);
+    }
+  }
+}
+
+@utility v-row {
+  overflow: clip;
+  overflow-clip-margin: 0.5rem;
+  margin-block-start: calc(var(--spacing) * 12.25);
+  transition-property: height, margin-block-start, opacity;
+  transition-duration: 200ms;
+  transition-timing-function: ease-out;
+
+  &:first-child {
+    margin-block-start: 0;
+  }
+
+  @media (width >= 48rem) {
+    margin-block-start: calc(var(--spacing) * 4.5);
+  }
+
+  &[data-leaving] {
+    height: 0;
+    margin-block-start: 0;
+    opacity: 0;
+  }
+}
+
+@utility v-row-enter {
+  @starting-style {
+    height: 0;
+    margin-block-start: 0;
+    opacity: 0;
   }
 }
 
@@ -189,6 +266,7 @@ html.dark {
     @apply text-body font-sans font-medium;
     color-scheme: light;
     overflow-y: scroll;
+    interpolate-size: allow-keywords;
   }
   html.dark {
     color-scheme: dark;
@@ -206,12 +284,6 @@ html.dark {
   }
   :focus-visible {
     @apply outline-accent-ink outline-2 outline-offset-2;
-  }
-  input[type="date"]::-webkit-calendar-picker-indicator {
-    position: absolute;
-    inset: 0;
-    cursor: pointer;
-    opacity: 0;
   }
 }
 

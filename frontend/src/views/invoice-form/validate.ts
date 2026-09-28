@@ -40,5 +40,5 @@ export const findMissing = (draft: Draft) => {
 
 export const focusFirstMissing = (form: HTMLFormElement, missing: string[]) => {
   const control = form.elements.namedItem(missing[0]);
-  if (control instanceof HTMLElement) control.focus();
+  if (control instanceof HTMLElement) control.focus({ preventScroll: true });
 };

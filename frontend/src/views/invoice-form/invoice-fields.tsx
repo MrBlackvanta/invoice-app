@@ -1,4 +1,4 @@
-import { DateField, SelectField, TextField } from "@/components/ui";
+import { DatePicker, SelectMenu, TextField } from "@/components/ui";
 import type { ChangeEvent } from "react";
 import { blankItem, PAYMENT_TERMS, type Draft, type DraftItem } from "./draft";
 import ItemRows from "./item-rows";
@@ -7,7 +7,10 @@ type TextKey = {
   [K in keyof Draft]: Draft[K] extends string ? K : never;
 }[keyof Draft];
 
-const termLabel = (days: number) => `Net ${days} Day${days === 1 ? "" : "s"}`;
+const terms = PAYMENT_TERMS.map((days) => ({
+  value: days,
+  label: `Net ${days} Day${days === 1 ? "" : "s"}`,
+}));
 
 export default function InvoiceFields({
   draft,
@@ -103,21 +106,23 @@ export default function InvoiceFields({
 
       <div className="mt-10.25 space-y-6.25 md:mt-12.25">
         <div className="grid gap-y-6.25 md:grid-cols-2 md:gap-x-6">
-          <DateField label="Invoice Date" {...fieldProps("createdAt")} />
-          <SelectField
+          <DatePicker
+            label="Invoice Date"
+            name="createdAt"
+            value={draft.createdAt}
+            invalid={missing.includes("createdAt")}
+            aria-describedby={
+              missing.includes("createdAt") ? describedBy : undefined
+            }
+            onChange={(createdAt) => onChange({ createdAt })}
+          />
+          <SelectMenu
             label="Payment Terms"
             name="paymentTerms"
             value={draft.paymentTerms}
-            onChange={({ target }) =>
-              onChange({ paymentTerms: Number(target.value) })
-            }
-          >
-            {PAYMENT_TERMS.map((days) => (
-              <option key={days} value={days}>
-                {termLabel(days)}
-              </option>
-            ))}
-          </SelectField>
+            options={terms}
+            onChange={(paymentTerms) => onChange({ paymentTerms })}
+          />
         </div>
         <TextField label="Project Description" {...fieldProps("description")} />
       </div>
@@ -127,8 +132,8 @@ export default function InvoiceFields({
         missing={missing}
         describedBy={describedBy}
         onChange={changeItem}
-        onRemove={(index) =>
-          onChange({ items: draft.items.filter((_, at) => at !== index) })
+        onRemove={(key) =>
+          onChange({ items: draft.items.filter((item) => item.key !== key) })
         }
         onAdd={() => onChange({ items: [...draft.items, blankItem()] })}
       />

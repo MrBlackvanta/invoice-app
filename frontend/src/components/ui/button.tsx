@@ -15,7 +15,7 @@ export default function Button({
   return (
     <button
       type="button"
-      className={`rounded-pill text-body flex h-12 shrink-0 items-center justify-center px-6 font-bold transition-colors ${tone[variant]} ${className ?? ""}`}
+      className={`rounded-pill text-body v-ink-center flex h-12 shrink-0 items-center justify-center px-6 font-bold transition-colors ${tone[variant]} ${className ?? ""}`}
       {...props}
     />
   );

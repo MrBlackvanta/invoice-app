@@ -23,7 +23,7 @@ export default function StatusChip({
 }) {
   return (
     <span
-      className={`rounded-chip text-body inline-flex h-10 w-26 items-center justify-center gap-2 font-bold ${tone[status]} ${className ?? ""}`}
+      className={`rounded-chip text-body v-ink-center inline-flex h-10 w-26 items-center justify-center gap-2 font-bold ${tone[status]} ${className ?? ""}`}
       {...props}
     >
       <span className="size-2 rounded-full bg-current" />

@@ -1,6 +1,9 @@
+"use client";
+
 import { DeleteIcon } from "@/components/icons";
 import { Button, TextField } from "@/components/ui";
-import { formatDecimal } from "@/lib";
+import { afterMotion, formatDecimal } from "@/lib";
+import { useState, type MouseEvent } from "react";
 import { itemTotal, type DraftItem } from "./draft";
 import { ADD_ITEM, itemFieldName } from "./validate";
 
@@ -23,9 +26,12 @@ export default function ItemRows({
   missing: string[];
   describedBy: string;
   onChange: (index: number, patch: Partial<DraftItem>) => void;
-  onRemove: (index: number) => void;
+  onRemove: (key: string) => void;
   onAdd: () => void;
 }) {
+  const [leaving, setLeaving] = useState<string[]>([]);
+  const [mounted] = useState(() => new Set(items.map((item) => item.key)));
+
   const fieldProps = (index: number, field: "name" | "quantity" | "price") => {
     const name = itemFieldName(index, field);
     const invalid = missing.includes(name);
@@ -40,6 +46,16 @@ export default function ItemRows({
     };
   };
 
+  const remove = (key: string, event: MouseEvent<HTMLButtonElement>) => {
+    const row = event.currentTarget.closest("li");
+
+    setLeaving((keys) => [...keys, key]);
+    afterMotion(row).then(() => {
+      onRemove(key);
+      setLeaving((keys) => keys.filter((leavingKey) => leavingKey !== key));
+    });
+  };
+
   return (
     <section className="mt-17.25 md:mt-8.75">
       <h3 className="text-section text-subhead">Item List</h3>
@@ -52,9 +68,13 @@ export default function ItemRows({
         <span className="w-6" />
       </div>
       {items.length > 0 && (
-        <ul className="mt-5.5 space-y-12.25 md:mt-3.75 md:space-y-4.5">
+        <ul className="mt-5.5 md:mt-3.75">
           {items.map((item, index) => (
-            <li key={item.key} className="md:flex md:items-end md:gap-4">
+            <li
+              key={item.key}
+              data-leaving={leaving.includes(item.key) || undefined}
+              className={`v-row md:flex md:items-end md:gap-4 ${mounted.has(item.key) ? "" : "v-row-enter"}`}
+            >
               <TextField
                 label={
                   <>
@@ -90,13 +110,13 @@ export default function ItemRows({
                   <span className="text-meta text-muted md:sr-only">
                     Total<span className="sr-only"> for item {index + 1}</span>
                   </span>
-                  <span className="text-body text-muted flex h-12 items-center font-bold">
+                  <span className="text-body text-muted v-ink-center flex h-12 items-center font-bold">
                     {formatDecimal(itemTotal(item))}
                   </span>
                 </p>
                 <button
                   type="button"
-                  onClick={() => onRemove(index)}
+                  onClick={(event) => remove(item.key, event)}
                   className="text-muted hover:text-danger-ink flex h-12 w-6 shrink-0 items-center justify-center transition-colors"
                 >
                   <DeleteIcon />
