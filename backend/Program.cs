@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
@@ -14,11 +16,20 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 });
 builder.Services.AddOpenApi();
 builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(
+        new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
+    )
+);
 builder.Services.AddDbContext<InvoiceDbContext>(options =>
-    options.UseNpgsql(DatabaseConnection.Resolve(builder.Configuration))
+    options
+        .UseNpgsql(DatabaseConnection.Resolve(builder.Configuration))
+        .UseSnakeCaseNamingConvention()
 );
 builder.Services.AddProblemDetails();
-builder.Services.AddHealthChecks().AddDbContextCheck<InvoiceDbContext>();
+builder
+    .Services.AddHealthChecks()
+    .AddDbContextCheck<InvoiceDbContext>(customTestQuery: InvoiceTableAnswers);
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -62,8 +73,18 @@ app.Use(NeverCache);
 app.UseRateLimiter();
 
 app.MapHealthChecks("/health").DisableRateLimiting();
+app.MapInvoices();
+
+await app.PrepareDatabaseAsync();
 
 app.Run();
+
+static async Task<bool> InvoiceTableAnswers(InvoiceDbContext database, CancellationToken token)
+{
+    await database.Invoices.Select(invoice => invoice.Id).FirstOrDefaultAsync(token);
+
+    return true;
+}
 
 static Task NeverCache(HttpContext context, RequestDelegate next)
 {

@@ -1,13 +1,14 @@
 # Invoice API
 
-Self-hosted .NET 9 backend for the invoice app. The domain model and its endpoints land with
-the build phase; what is here now is the service scaffold — configuration, connection
-handling, rate limiting, CORS, health checks and the container.
+Self-hosted .NET 9 backend for the invoice app: the invoice model, its endpoints, and the
+service scaffold around them — configuration, connection handling, rate limiting, CORS,
+health checks and the container.
 
 ## Tech stack
 
 - **.NET 9 / ASP.NET Core** — minimal APIs, top-level statements
-- **Entity Framework Core 9** with **PostgreSQL** (Npgsql) — durable managed database
+- **Entity Framework Core 9** with **PostgreSQL** (Npgsql) — durable managed database,
+  snake_case schema so the tables are pleasant to query by hand
 - **Microsoft.AspNetCore.OpenApi** + **Scalar** — interactive API documentation
 - **Rate limiting** — fixed window, 60 requests per minute per forwarded IP
 - **Health checks** — `/health`, exempt from the rate limit
@@ -51,15 +52,52 @@ dotnet ef migrations add <Name> -o Data/Migrations
 
 ## Endpoints
 
-| Method | Route     | Purpose      |
-| ------ | --------- | ------------ |
-| `GET`  | `/health` | Liveness     |
+| Method   | Route                   | Purpose                                     |
+| -------- | ----------------------- | ------------------------------------------- |
+| `GET`    | `/health`               | Liveness, and that the invoice table answers |
+| `GET`    | `/invoices`             | Every invoice, in the order they were added |
+| `GET`    | `/invoices/{id}`        | One invoice                                 |
+| `POST`   | `/invoices`             | Create one; the server assigns the id       |
+| `PUT`    | `/invoices/{id}`        | Replace one, items included                 |
+| `PATCH`  | `/invoices/{id}/status` | Move one between draft, pending and paid    |
+| `DELETE` | `/invoices/{id}`        | Delete one, its items with it               |
+
+Writes answer `400` with an RFC 7807 `ValidationProblemDetails` whose `errors` keys are the
+names the form uses for its inputs — `senderStreet`, `clientEmail`, `items.0.price`,
+`addItem` — so the client maps a rejection onto its own fields without a translation table.
 
 Responses carry `Cache-Control: no-store` and `Vary: Origin`. These are per-client mutable
 records that the browser polls, so a shared cache would be wrong at any TTL, and `Vary` stops
 an intermediary handing one origin's CORS headers to another. Preflight replies are the
 exception and stay cacheable: the header middleware sits after the CORS middleware, which
 answers `OPTIONS` without calling further into the pipeline.
+
+## The model
+
+An invoice owns its items and carries two addresses. The addresses are complex types, so they
+flatten into columns on `invoices` rather than earning a table of their own; the items are an
+owned collection in `invoice_items`, which is what makes replacing an invoice's items delete
+the rows that went away instead of orphaning them.
+
+**Nothing derived is taken from the client.** `paymentDue`, each item's `total` and the
+invoice `total` are recomputed on every write by one method, and a request that supplies them
+is ignored — as is a request that supplies an `id`. That matters more than tidiness: the
+client sends the shape it renders, so a payload always arrives with those fields filled in,
+and the only way they cannot drift is for the server to never read them. Ids are assigned
+here too, as two letters and four digits, retried against the unique index if the draw
+collides.
+
+Validation depends on the status, because the form does. A draft may be empty — that is what
+"Save as Draft" means with nothing filled in — while `pending` and `paid` require every field
+the form marks required and at least one named item. The same rules run on `PATCH .../status`,
+so an empty draft cannot be promoted to pending through the side door.
+
+The list is ordered by an identity `sequence` column rather than by date or id, because the
+design's own order is neither: `RT2080` (11 October) sits above `AA1449` (7 October), and
+alphabetically the whole list would reshuffle. Sequence preserves entry order and puts new
+invoices at the end, which is where the app has always put them. The seed is inserted one row
+at a time for the same reason — batching them lets EF order the statement by primary key, and
+the seven come back alphabetised.
 
 ## Storage
 
@@ -99,9 +137,10 @@ That is the trap worth remembering: a green health check and a broken database a
 observation unless the probe touches what the queries touch. `MigrateAsync` on startup replaces
 it, and the schema lives in `Data/Migrations` where a change to the model is a reviewable file
 rather than a silent no-op. Migrating on startup is only safe because one instance runs; more
-than one needs the migration to move out of the boot path. Both the startup migration and a
-table-touching health probe come back with the first migration — until then there is no table
-for either to name.
+than one needs the migration to move out of the boot path. `/health` now runs a real read
+against `invoices` rather than opening a connection, which is the only version of the check
+worth having: renaming the table away turns `/health` from `200 Healthy` into
+`503 Unhealthy` while a plain connection still opens perfectly well.
 
 ## Keeping it awake
 
