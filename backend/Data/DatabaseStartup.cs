@@ -14,10 +14,10 @@ public static class DatabaseStartup
             return;
         }
 
-        await SeedInListOrderAsync(database);
+        await SeedInDeclaredOrderAsync(database);
     }
 
-    static async Task SeedInListOrderAsync(InvoiceDbContext database)
+    static async Task SeedInDeclaredOrderAsync(InvoiceDbContext database)
     {
         foreach (var invoice in SeedInvoices.All())
         {

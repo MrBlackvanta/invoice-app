@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
-
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
@@ -11,10 +10,16 @@
   <ItemGroup>
     <PackageReference Include="EFCore.NamingConventions" Version="9.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.7" PrivateAssets="all" />
+    <PackageReference
+      Include="Microsoft.EntityFrameworkCore.Design"
+      Version="9.0.7"
+      PrivateAssets="all"
+    />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
-    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="9.0.7" />
+    <PackageReference
+      Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore"
+      Version="9.0.7"
+    />
     <PackageReference Include="Scalar.AspNetCore" Version="2.14.11" />
   </ItemGroup>
-
 </Project>

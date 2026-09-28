@@ -28,7 +28,8 @@ public static class InvoiceEndpoints
     {
         var invoices = await database
             .Invoices.AsNoTracking()
-            .OrderBy(invoice => invoice.Sequence)
+            .OrderByDescending(invoice => invoice.CreatedAt)
+            .ThenByDescending(invoice => invoice.Sequence)
             .ToListAsync(token);
 
         return TypedResults.Ok(invoices.Select(invoice => invoice.ToResponse()).ToArray());
@@ -73,10 +74,7 @@ public static class InvoiceEndpoints
         CancellationToken token
     )
     {
-        var invoice = await database.Invoices.FirstOrDefaultAsync(
-            entity => entity.Id == id,
-            token
-        );
+        var invoice = await database.Invoices.FirstOrDefaultAsync(entity => entity.Id == id, token);
 
         if (invoice is null)
         {
@@ -104,10 +102,7 @@ public static class InvoiceEndpoints
         CancellationToken token
     )
     {
-        var invoice = await database.Invoices.FirstOrDefaultAsync(
-            entity => entity.Id == id,
-            token
-        );
+        var invoice = await database.Invoices.FirstOrDefaultAsync(entity => entity.Id == id, token);
 
         if (invoice is null)
         {
@@ -167,8 +162,5 @@ public static class InvoiceEndpoints
     }
 
     static bool IsDuplicateId(DbUpdateException error) =>
-        error.InnerException is PostgresException
-        {
-            SqlState: PostgresErrorCodes.UniqueViolation,
-        };
+        error.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation };
 }

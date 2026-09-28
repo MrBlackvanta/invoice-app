@@ -55,7 +55,7 @@ dotnet ef migrations add <Name> -o Data/Migrations
 | Method   | Route                   | Purpose                                     |
 | -------- | ----------------------- | ------------------------------------------- |
 | `GET`    | `/health`               | Liveness, and that the invoice table answers |
-| `GET`    | `/invoices`             | Every invoice, in the order they were added |
+| `GET`    | `/invoices`             | Every invoice, newest invoice date first    |
 | `GET`    | `/invoices/{id}`        | One invoice                                 |
 | `POST`   | `/invoices`             | Create one; the server assigns the id       |
 | `PUT`    | `/invoices/{id}`        | Replace one, items included                 |
@@ -92,12 +92,14 @@ Validation depends on the status, because the form does. A draft may be empty �
 the form marks required and at least one named item. The same rules run on `PATCH .../status`,
 so an empty draft cannot be promoted to pending through the side door.
 
-The list is ordered by an identity `sequence` column rather than by date or id, because the
-design's own order is neither: `RT2080` (11 October) sits above `AA1449` (7 October), and
-alphabetically the whole list would reshuffle. Sequence preserves entry order and puts new
-invoices at the end, which is where the app has always put them. The seed is inserted one row
-at a time for the same reason — batching them lets EF order the statement by primary key, and
-the seven come back alphabetised.
+The list is ordered by invoice date, newest first, so a new invoice arrives where it is looked
+for. Dates tie constantly — several invoices in one day is the ordinary case — and a tie is
+where ordering quietly breaks: Postgres may return a tied group in any order it likes, and
+"any order it likes" is free to differ between two identical requests. An identity `sequence`
+column breaks the tie by entry order, newest entered first, which is also the only tiebreak a
+user would predict. The seed is inserted one row at a time so its declared order reaches
+`sequence`; batching lets EF order the statement by primary key, and the rows come back
+alphabetised.
 
 ## Storage
 
