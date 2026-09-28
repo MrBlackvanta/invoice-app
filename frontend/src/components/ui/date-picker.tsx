@@ -123,13 +123,13 @@ export default function DatePicker({
           data-open={open || undefined}
           role="dialog"
           aria-labelledby={monthId}
-          className="v-menu bg-popover shadow-popover rounded-card absolute inset-x-0 top-full z-20 mt-2 p-4"
+          className="v-menu bg-popover shadow-popover rounded-card absolute top-full left-1/2 z-20 mt-2 w-85 max-w-[calc(100vw-1rem)] -translate-x-1/2 p-4 md:left-0 md:translate-x-0"
         >
           <div className="flex items-center justify-between">
             <button
               type="button"
               onClick={() => stepMonth(-1)}
-              className="text-muted hover:text-accent grid size-8 place-items-center transition-colors"
+              className="text-muted hover:text-accent grid size-11 place-items-center transition-colors"
             >
               <ArrowLeftIcon />
               <span className="sr-only">Previous month</span>
@@ -140,7 +140,7 @@ export default function DatePicker({
             <button
               type="button"
               onClick={() => stepMonth(1)}
-              className="text-muted hover:text-accent grid size-8 place-items-center transition-colors"
+              className="text-muted hover:text-accent grid size-11 place-items-center transition-colors"
             >
               <ArrowRightIcon />
               <span className="sr-only">Next month</span>
