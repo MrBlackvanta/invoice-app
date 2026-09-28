@@ -55,7 +55,7 @@ dotnet ef migrations add <Name> -o Data/Migrations
 | Method   | Route                   | Purpose                                     |
 | -------- | ----------------------- | ------------------------------------------- |
 | `GET`    | `/health`               | Liveness, and that the invoice table answers |
-| `GET`    | `/invoices`             | Every invoice, newest invoice date first    |
+| `GET`    | `/invoices`             | Every invoice, latest due date first        |
 | `GET`    | `/invoices/{id}`        | One invoice                                 |
 | `POST`   | `/invoices`             | Create one; the server assigns the id       |
 | `PUT`    | `/invoices/{id}`        | Replace one, items included                 |
@@ -94,14 +94,16 @@ so an empty draft cannot be promoted to pending through the side door. Quantitie
 numbers and amounts are never negative; the form refuses both before sending, and these rules
 are what holds when the form is not the caller.
 
-The list is ordered by invoice date, newest first, so a new invoice arrives where it is looked
-for. Dates tie constantly — several invoices in one day is the ordinary case — and a tie is
-where ordering quietly breaks: Postgres may return a tied group in any order it likes, and
-"any order it likes" is free to differ between two identical requests. An identity `sequence`
-column breaks the tie by entry order, newest entered first, which is also the only tiebreak a
-user would predict. The seed is inserted one row at a time so its declared order reaches
-`sequence`; batching lets EF order the statement by primary key, and the rows come back
-alphabetised.
+The list is ordered by due date, newest first. That is the date each row displays, so the
+column a reader scans is the column the order follows; ordering by the invoice date instead
+sorts correctly by a field the list never shows, which on screen is indistinguishable from no
+order at all. Due dates tie readily — payment terms are a handful of round numbers, so
+invoices entered days apart land on the same day — and a tie is where ordering quietly breaks:
+Postgres may return a tied group in any order it likes, and "any order it likes" is free to
+differ between two identical requests. An identity `sequence` column breaks the tie by entry
+order, newest entered first, which is also the only tiebreak a user would predict. The seed is
+inserted one row at a time so its declared order reaches `sequence`; batching lets EF order the
+statement by primary key, and the rows come back alphabetised.
 
 ## Storage
 

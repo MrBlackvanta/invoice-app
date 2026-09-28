@@ -28,7 +28,7 @@ public static class InvoiceEndpoints
     {
         var invoices = await database
             .Invoices.AsNoTracking()
-            .OrderByDescending(invoice => invoice.CreatedAt)
+            .OrderByDescending(invoice => invoice.PaymentDue)
             .ThenByDescending(invoice => invoice.Sequence)
             .ToListAsync(token);
 
