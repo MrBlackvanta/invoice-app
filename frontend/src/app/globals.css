@@ -273,7 +273,7 @@ html.dark {
 
 @layer base {
   html {
-    @apply text-body font-sans font-medium;
+    @apply font-sans;
     color-scheme: light;
     overflow-y: scroll;
     interpolate-size: allow-keywords;
@@ -282,7 +282,7 @@ html.dark {
     color-scheme: dark;
   }
   body {
-    @apply bg-canvas text-muted;
+    @apply text-body bg-canvas font-medium text-muted;
   }
   h1,
   h2,
