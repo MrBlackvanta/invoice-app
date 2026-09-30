@@ -79,14 +79,6 @@ public class InvoiceMappingTests
     }
 
     [Fact]
-    public void TurnsAMissingDateIntoTheDefault()
-    {
-        var invoice = (Sample.Request() with { CreatedAt = null }).ToInvoice("AB1234");
-
-        Assert.Equal(default, invoice.CreatedAt);
-    }
-
-    [Fact]
     public void TrimsItemNames()
     {
         var request = Sample.Request(items: [new InvoiceItemPayload("  Banner  ", 1, 10m)]);

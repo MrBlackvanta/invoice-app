@@ -17,4 +17,6 @@ afterEach(() => {
   resetMedia();
   localStorage.clear();
   document.documentElement.className = "";
+  document.documentElement.removeAttribute("style");
+  delete document.documentElement.dataset.sweep;
 });

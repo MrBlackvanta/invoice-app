@@ -40,7 +40,7 @@ async function load() {
 
 async function send(request: () => Promise<unknown>) {
   await request();
-  publish(loaded(await api.listInvoices()));
+  await load();
 }
 
 async function showImmediately(

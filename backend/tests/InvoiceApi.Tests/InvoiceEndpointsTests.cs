@@ -258,15 +258,17 @@ public class InvoiceEndpointsTests(InvoiceApiFactory factory) : IClassFixture<In
     }
 
     [Fact]
-    public async Task RefusesADraftWithNoDateAlthoughTheFieldIsOptional()
+    public async Task RefusesADraftThatOmitsTheDate()
     {
         factory.Reset();
 
-        var response = await Post(
-            new InvoiceRequest(null, 30, InvoiceStatus.Draft, null, null, null, null, null, null)
+        var response = await client.PostAsync(
+            "/invoices",
+            JsonContent.Create(new { paymentTerms = 30, status = "draft" })
         );
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Contains("createdAt", await response.Content.ReadAsStringAsync());
     }
 
     [Fact]

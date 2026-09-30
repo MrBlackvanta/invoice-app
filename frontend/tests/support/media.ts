@@ -47,3 +47,6 @@ export const setMediaMatches = (query: string, matches: boolean) => {
 
 export const prefersDark = (matches: boolean) =>
   setMediaMatches("(prefers-color-scheme: dark)", matches);
+
+export const prefersReducedMotion = (matches: boolean) =>
+  setMediaMatches("(prefers-reduced-motion: reduce)", matches);

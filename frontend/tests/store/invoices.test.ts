@@ -285,14 +285,38 @@ describe("deleteInvoice", () => {
 });
 
 describe("a reload that fails after a change was saved", () => {
-  it("rolls the change off screen even though the server kept it", async () => {
+  it("keeps the change the server accepted", async () => {
     const { api, store, view } = await mountWith();
     api.changeInvoiceStatus.mockResolvedValue(anInvoice());
     api.listInvoices.mockRejectedValue(new Error("offline"));
 
     await act(async () => store.markInvoicePaid(pending.id));
 
-    expect(view.result.current.invoices).toEqual([pending, draft]);
-    expect(view.result.current.failure).toBe("That change didn’t save.");
+    expect(view.result.current.invoices[0].status).toBe("paid");
+    expect(view.result.current.failure).not.toBe("That change didn’t save.");
+  });
+
+  it("blames the reload rather than the change", async () => {
+    const { api, store, view } = await mountWith();
+    api.deleteInvoice.mockResolvedValue(new Response(null, { status: 204 }));
+    api.listInvoices.mockRejectedValue(new Error("offline"));
+
+    await act(async () => store.deleteInvoice(pending.id));
+
+    expect(view.result.current.invoices).toEqual([draft]);
+    expect(view.result.current.failure).toBe("We couldn’t load your invoices.");
+  });
+
+  it("still reports a created invoice as saved", async () => {
+    const { api, store } = await mountWith();
+    api.createInvoice.mockResolvedValue(anInvoice());
+    api.listInvoices.mockRejectedValue(new Error("offline"));
+
+    let saved: boolean | undefined;
+    await act(async () => {
+      saved = await store.addInvoice({ description: "new" } as never);
+    });
+
+    expect(saved).toBe(true);
   });
 });

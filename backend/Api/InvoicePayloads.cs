@@ -3,7 +3,7 @@ public record AddressPayload(string Street, string City, string PostCode, string
 public record InvoiceItemPayload(string Name, int Quantity, decimal Price);
 
 public record InvoiceRequest(
-    DateOnly? CreatedAt,
+    DateOnly CreatedAt,
     int PaymentTerms,
     InvoiceStatus Status,
     string? Description,

@@ -11,7 +11,7 @@ public static class InvoiceMapping
 
     public static void ApplyTo(this InvoiceRequest request, Invoice invoice)
     {
-        invoice.CreatedAt = request.CreatedAt ?? default;
+        invoice.CreatedAt = request.CreatedAt;
         invoice.PaymentTerms = request.PaymentTerms;
         invoice.Status = request.Status;
         invoice.Description = Text(request.Description);

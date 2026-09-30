@@ -29,9 +29,36 @@ reads `Saving…`, and the drawer closes only once the server has the record. Af
 successful write the list is re-read rather than patched in place, which is why the client
 holds no ordering rules of its own.
 
+Only the write itself decides whether a change is rolled back. The re-read that follows it can
+fail on its own — the server kept the change, the list just could not be fetched again — and
+rolling back there would take a saved change off the screen and blame the user's write for it.
+That case keeps what the server accepted and reports a failed load instead, which is what
+actually happened.
+
 An unreachable API is a state, not an accident. The first load shows skeleton rows the exact
 height of real ones, then a retry screen that says the service may be waking up, because on a
 free instance that is usually what is happening.
+
+## Theme
+
+The toggle writes the choice to `localStorage` and paints the `dark` class on `<html>` itself,
+which is what lets a pre-paint script restore it before the first frame instead of flashing the
+wrong theme. `useSyncExternalStore` reads that class back, so the class is the state rather than a
+copy of it.
+
+The switch sweeps a circle out of the button. A view transition snapshots the page, and the new
+theme is revealed through a `clip-path` circle growing from the button's centre — except going the
+other way, where the old theme's circle shrinks instead, so dark always sits underneath and light
+is the layer that arrives or leaves. The radius is computed rather than guessed: a percentage in
+`circle()` resolves against `√(w² + h²) / √2`, so the number handed to CSS is the distance to the
+furthest corner expressed in those units, and the circle stops exactly when it has covered the
+viewport. A round `150%` would cover it too, and would spend the last third of the duration
+growing a circle that is already off screen. Origin and radius travel as three custom properties
+on `<html>` and the direction as `data-sweep`, which is the only thing the stylesheet matches on.
+
+Nothing here is load-bearing. `withThemeSweep` applies the change directly when the browser has no
+`startViewTransition` or when the visitor asked for reduced motion, so the theme still switches —
+it just switches instantly.
 
 ## Running your own
 
@@ -70,6 +97,14 @@ The store is a module-level singleton that loads on first subscribe, so each tes
 it through `vi.resetModules()` against a mocked API. That is what makes the optimistic paths
 testable: a delete or a `Mark as Paid` can be observed mid-flight, before the request it
 would roll back has settled.
+
+Queries that reach a button by its accessible name match on a prefix rather than the whole
+string. Testing Library computes its own accessible names, and where a label is split across an
+`sr-only` span it trims each part before joining them, so `Filter by status` arrives as
+`Filterby status`. Chrome disagrees: axe-core — the engine Lighthouse embeds — reads the same
+button as `Filter by status` at 1440px and at 375px, with the span absolutely positioned. The
+markup is right and the prefix match is the accommodation, so do not go moving that space to
+make a query read better.
 
 ## Commands
 

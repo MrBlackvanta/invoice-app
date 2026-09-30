@@ -112,7 +112,13 @@ collides.
 
 Validation depends on the status, because the form does. A draft may be empty — that is what
 "Save as Draft" means with nothing filled in — while `pending` and `paid` require every field
-the form marks required and at least one named item. The same rules run on `PATCH .../status`,
+the form marks required and at least one named item. The date and the payment terms are the two
+exceptions, checked before the status is consulted and so required even of a draft. They have no
+empty form the way a string does: every other optional field maps a missing value onto `""`,
+which a draft accepts and a reader sees as blank, whereas a missing date maps onto `0001-01-01`,
+which would be stored and then rendered as a real due date. `CreatedAt` is therefore declared
+non-nullable, so the contract says what it enforces rather than offering an option that always
+comes back `400`. The same rules run on `PATCH .../status`,
 so an empty draft cannot be promoted to pending through the side door. Quantities are whole
 numbers and amounts are never negative; the form refuses both before sending, and these rules
 are what holds when the form is not the caller.
