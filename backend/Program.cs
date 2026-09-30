@@ -93,3 +93,5 @@ static Task NeverCache(HttpContext context, RequestDelegate next)
 
     return next(context);
 }
+
+public partial class Program;

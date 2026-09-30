@@ -50,6 +50,29 @@ Changing the model means a new migration, which needs the EF Core tools
 dotnet ef migrations add <Name> -o Data/Migrations
 ```
 
+## Tests
+
+xUnit, in `tests/InvoiceApi.Tests`, run with `dotnet test`. The validation rules, the request
+and response mapping, the derived totals, id generation, the seed and the connection-string
+parser are tested directly. The endpoints are tested through `WebApplicationFactory`, so a
+request travels the real pipeline — routing, model binding, the JSON contract, validation and
+`ProblemDetails` — against a real database.
+
+That database is SQLite held open in memory, and the project's own migration is applied to it
+rather than the schema being recreated from the model, so the migration itself is exercised on
+every run. SQLite cannot supply two things Postgres does. It has no identity column outside a
+row id, so `invoices.sequence` and the owned items' key are filled by client-side value
+generators standing in for the Postgres identity. And its errors are `SqliteException`, not
+`PostgresException`, so the duplicate-id retry in `InsertAsync` cannot be provoked here — that
+path is Postgres-only and stays uncovered until these run against one.
+
+The rate limiter is switched off for the functional tests, because sixty requests a minute is
+a budget a test class exhausts. One test keeps it on, in its own host, and proves the
+sixty-first request is refused while `/health` still answers.
+
+The test project sits under `backend/` but is excluded from the API's compile items and from
+the Docker context, so `dotnet publish` and the image never see it.
+
 ## Endpoints
 
 | Method   | Route                   | Purpose                                     |
