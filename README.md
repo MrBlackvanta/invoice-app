@@ -14,7 +14,10 @@ challenge on Frontend Mentor.
 - React
 - TypeScript
 - Tailwind CSS
+- Vitest
+- Testing Library
 - .NET (see `backend/`)
+- xUnit
 - PostgreSQL
 
 ## Author
