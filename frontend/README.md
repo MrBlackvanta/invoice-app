@@ -48,12 +48,36 @@ connection string and `render.yaml` for `Cors__AllowedOrigins__0`, which has to 
 origin you deploy this to. CORS constrains browsers only, so that allow-list protects your
 users, not your API.
 
+## Tests
+
+Vitest and Testing Library, run with `pnpm test`. The suite covers the calendar and
+formatting helpers, the form's validation and draft mapping, the API client, the store, and
+the views that own behaviour — the list and its status filter, the invoice drawer, and the
+theme.
+
+They live in `tests/` rather than beside the source they exercise, because Tailwind v4 scans
+the project for class names and would compile any class string appearing in a test file into
+the stylesheet. `globals.css` excludes the directory as well, so a class named in a test can
+never reach the build.
+
+Two things jsdom does not implement are stubbed in `tests/setup.ts`: `matchMedia`, which the
+theme and the reduced-motion check both read, and `HTMLDialogElement.showModal`, which the
+drawer opens with. The dialog stub only models the open and close contract — the top layer,
+the focus trap and the backdrop are the browser's, so those are verified in a real one
+rather than here.
+
+The store is a module-level singleton that loads on first subscribe, so each test re-imports
+it through `vi.resetModules()` against a mocked API. That is what makes the optimistic paths
+testable: a delete or a `Mark as Paid` can be observed mid-flight, before the request it
+would roll back has settled.
+
 ## Commands
 
 ```bash
 pnpm dev
 pnpm build
 pnpm lint
+pnpm test
 pnpm dlx wrangler deploy
 ```
 
