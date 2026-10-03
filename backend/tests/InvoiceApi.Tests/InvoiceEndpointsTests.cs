@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using InvoiceApi.Tests.Support;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace InvoiceApi.Tests;
@@ -294,6 +295,27 @@ public class InvoiceEndpointsTests(InvoiceApiFactory factory) : IClassFixture<In
     }
 
     [Fact]
+    public async Task RefusesToCreateAnInvoiceThatIsAlreadyPaid()
+    {
+        factory.Reset();
+
+        var response = await Post(Sample.Request(InvoiceStatus.Paid));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Contains("status", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task StoresNothingWhenItRefusesTheStatusANewInvoiceAsksFor()
+    {
+        factory.Reset();
+
+        await Post(Sample.Request(InvoiceStatus.Paid));
+
+        Assert.Empty(await ReadAll(await client.GetAsync("/invoices")));
+    }
+
+    [Fact]
     public async Task ReplacesAnInvoiceWholesale()
     {
         factory.Reset(Stored("AA0001"));
@@ -378,6 +400,41 @@ public class InvoiceEndpointsTests(InvoiceApiFactory factory) : IClassFixture<In
     }
 
     [Fact]
+    public async Task WillNotPayAnInvoiceThroughAReplacement()
+    {
+        factory.Reset(Stored("AA0001", InvoiceStatus.Draft));
+
+        var response = await Put("AA0001", Sample.Request(InvoiceStatus.Paid));
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task LeavesTheStoredInvoiceAloneWhenItRefusesTheStatusAReplacementAsksFor()
+    {
+        factory.Reset(Stored("AA0001", InvoiceStatus.Draft));
+
+        await Put("AA0001", Sample.Request(InvoiceStatus.Paid) with { ClientName = "Alex Grim" });
+        var unchanged = await Read(await client.GetAsync("/invoices/AA0001"));
+
+        Assert.Equal(InvoiceStatus.Draft, unchanged.Status);
+        Assert.Equal("Jensen Huang", unchanged.ClientName);
+    }
+
+    [Fact]
+    public async Task EditsAPaidInvoiceWithoutChangingItsStatus()
+    {
+        factory.Reset(Stored("AA0001", InvoiceStatus.Paid));
+
+        var updated = await Read(
+            await Put("AA0001", Sample.Request(InvoiceStatus.Paid) with { ClientName = "Alex Grim" })
+        );
+
+        Assert.Equal(InvoiceStatus.Paid, updated.Status);
+        Assert.Equal("Alex Grim", updated.ClientName);
+    }
+
+    [Fact]
     public async Task MarksAnInvoicePaid()
     {
         factory.Reset(Stored("AA0001"));
@@ -406,6 +463,62 @@ public class InvoiceEndpointsTests(InvoiceApiFactory factory) : IClassFixture<In
         var response = await Patch("ZZ9999", InvoiceStatus.Paid);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task WillNotPayADraftThatWasNeverSent()
+    {
+        factory.Reset(Stored("AA0001", InvoiceStatus.Draft));
+
+        var response = await Patch("AA0001", InvoiceStatus.Paid);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task LeavesTheDraftAloneWhenItRefusesToPayIt()
+    {
+        factory.Reset(Stored("AA0001", InvoiceStatus.Draft));
+
+        await Patch("AA0001", InvoiceStatus.Paid);
+        var unchanged = await Read(await client.GetAsync("/invoices/AA0001"));
+
+        Assert.Equal(InvoiceStatus.Draft, unchanged.Status);
+    }
+
+    [Theory]
+    [InlineData(InvoiceStatus.Pending)]
+    [InlineData(InvoiceStatus.Draft)]
+    public async Task WillNotReopenAPaidInvoice(InvoiceStatus status)
+    {
+        factory.Reset(Stored("AA0001", InvoiceStatus.Paid));
+
+        var response = await Patch("AA0001", status);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task NamesBothStatusesAsItSendsThemWhenItRefusesAMove()
+    {
+        factory.Reset(Stored("AA0001", InvoiceStatus.Paid));
+
+        var response = await Patch("AA0001", InvoiceStatus.Pending);
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>(
+            InvoiceApiFactory.Json
+        );
+
+        Assert.Equal("An invoice cannot move from \"paid\" to \"pending\".", problem!.Detail);
+    }
+
+    [Fact]
+    public async Task AcceptsTheStatusAnInvoiceAlreadyHas()
+    {
+        factory.Reset(Stored("AA0001", InvoiceStatus.Paid));
+
+        var updated = await Read(await Patch("AA0001", InvoiceStatus.Paid));
+
+        Assert.Equal(InvoiceStatus.Paid, updated.Status);
     }
 
     [Fact]

@@ -21,6 +21,12 @@ There is one source of truth and it is the API. The store holds the last list th
 plus whether a load is in flight and whether the last request failed; nothing is cached across
 reloads, so a stale invoice is never rendered as a real one.
 
+`Mark as Paid` appears on a pending invoice and on nothing else. The brief moves an invoice
+draft to pending to paid, so the button on a paid one is a write that changes nothing and the
+button on a draft would skip the step where the invoice is sent. The server holds the same
+sequence and answers `409` to anything that breaks it, which is what the rule rests on; hiding
+the button is how the screen stops offering an action the invoice cannot take.
+
 Writes divide by whether they can be refused. `Mark as Paid` and `Delete` cannot fail
 validation, so they are applied locally, sent, and rolled back with a dismissible message if
 the request fails — the row moves at once and corrects itself if the server disagrees. Saving

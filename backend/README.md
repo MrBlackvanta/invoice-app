@@ -82,12 +82,14 @@ the Docker context, so `dotnet publish` and the image never see it.
 | `GET`    | `/invoices/{id}`        | One invoice                                 |
 | `POST`   | `/invoices`             | Create one; the server assigns the id       |
 | `PUT`    | `/invoices/{id}`        | Replace one, items included                 |
-| `PATCH`  | `/invoices/{id}/status` | Move one between draft, pending and paid    |
+| `PATCH`  | `/invoices/{id}/status` | Move one forward a step, never backwards    |
 | `DELETE` | `/invoices/{id}`        | Delete one, its items with it               |
 
 Writes answer `400` with an RFC 7807 `ValidationProblemDetails` whose `errors` keys are the
 names the form uses for its inputs — `senderStreet`, `clientEmail`, `items.0.price`,
 `addItem` — so the client maps a rejection onto its own fields without a translation table.
+A write that asks for a status the invoice cannot move to answers `409` instead; see the
+model below.
 
 Responses carry `Cache-Control: no-store` and `Vary: Origin`. These are per-client mutable
 records that the browser polls, so a shared cache would be wrong at any TTL, and `Vary` stops
@@ -122,6 +124,17 @@ comes back `400`. The same rules run on `PATCH .../status`,
 so an empty draft cannot be promoted to pending through the side door. Quantities are whole
 numbers and amounts are never negative; the form refuses both before sending, and these rules
 are what holds when the form is not the caller.
+
+The status is a one-way sequence rather than a free field. An invoice starts as a draft or as
+pending, moves draft to pending and pending to paid, and stops there; nothing moves backwards
+and nothing skips the middle, because an invoice that was never sent cannot have been paid.
+A move that breaks the sequence answers `409` with a `ProblemDetails` naming both statuses,
+which is a different thing from a `400`: the payload is fine, the invoice is simply not in a
+status that allows it. Re-sending the status an invoice already has is not a move and is
+accepted, so two tabs racing the same `Mark as Paid` do not turn the second click into an
+error the user cannot act on. All three write routes consult the same table. Enforcing it on
+`PATCH .../status` alone would leave `PUT` and `POST` as side doors into `paid`, and a rule
+with a side door is decoration.
 
 The list is ordered by due date, newest first. That is the date each row displays, so the
 column a reader scans is the column the order follows; ordering by the invoice date instead

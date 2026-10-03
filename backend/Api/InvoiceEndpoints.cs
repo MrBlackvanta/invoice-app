@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -54,6 +55,16 @@ public static class InvoiceEndpoints
         CancellationToken token
     )
     {
+        if (!InvoiceRules.AllowsStart(request.Status))
+        {
+            return TypedResults.ValidationProblem(
+                new Dictionary<string, string[]>
+                {
+                    ["status"] = ["A new invoice is saved as a draft or sent as pending."],
+                }
+            );
+        }
+
         var invoice = request.ToInvoice(InvoiceId.Next());
         var problems = InvoiceRules.Check(invoice);
 
@@ -67,7 +78,9 @@ public static class InvoiceEndpoints
         return TypedResults.Created($"/invoices/{invoice.Id}", invoice.ToResponse());
     }
 
-    static async Task<Results<Ok<InvoiceResponse>, NotFound, ValidationProblem>> ReplaceAsync(
+    static async Task<
+        Results<Ok<InvoiceResponse>, NotFound, ValidationProblem, ProblemHttpResult>
+    > ReplaceAsync(
         string id,
         InvoiceRequest request,
         InvoiceDbContext database,
@@ -79,6 +92,11 @@ public static class InvoiceEndpoints
         if (invoice is null)
         {
             return TypedResults.NotFound();
+        }
+
+        if (!InvoiceRules.AllowsMove(invoice.Status, request.Status))
+        {
+            return RefuseMove(invoice.Status, request.Status);
         }
 
         request.ApplyTo(invoice);
@@ -95,7 +113,9 @@ public static class InvoiceEndpoints
         return TypedResults.Ok(invoice.ToResponse());
     }
 
-    static async Task<Results<Ok<InvoiceResponse>, NotFound, ValidationProblem>> ChangeStatusAsync(
+    static async Task<
+        Results<Ok<InvoiceResponse>, NotFound, ValidationProblem, ProblemHttpResult>
+    > ChangeStatusAsync(
         string id,
         StatusRequest request,
         InvoiceDbContext database,
@@ -107,6 +127,11 @@ public static class InvoiceEndpoints
         if (invoice is null)
         {
             return TypedResults.NotFound();
+        }
+
+        if (!InvoiceRules.AllowsMove(invoice.Status, request.Status))
+        {
+            return RefuseMove(invoice.Status, request.Status);
         }
 
         invoice.Status = request.Status;
@@ -135,6 +160,16 @@ public static class InvoiceEndpoints
 
         return deleted == 0 ? TypedResults.NotFound() : TypedResults.NoContent();
     }
+
+    static ProblemHttpResult RefuseMove(InvoiceStatus from, InvoiceStatus to) =>
+        TypedResults.Problem(
+            title: "The invoice is not in a status that allows this change.",
+            detail: $"An invoice cannot move from \"{Named(from)}\" to \"{Named(to)}\".",
+            statusCode: StatusCodes.Status409Conflict
+        );
+
+    static string Named(InvoiceStatus status) =>
+        JsonNamingPolicy.CamelCase.ConvertName(status.ToString());
 
     static async Task InsertAsync(
         InvoiceDbContext database,

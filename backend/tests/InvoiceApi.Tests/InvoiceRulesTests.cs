@@ -242,6 +242,52 @@ public class InvoiceRulesTests
         Assert.Contains("addItem", problems);
     }
 
+    [Theory]
+    [InlineData(InvoiceStatus.Draft)]
+    [InlineData(InvoiceStatus.Pending)]
+    public void StartsAnInvoiceAsADraftOrAsPending(InvoiceStatus status)
+    {
+        Assert.True(InvoiceRules.AllowsStart(status));
+    }
+
+    [Fact]
+    public void WillNotStartAnInvoiceThatIsAlreadyPaid()
+    {
+        Assert.False(InvoiceRules.AllowsStart(InvoiceStatus.Paid));
+    }
+
+    [Theory]
+    [InlineData(InvoiceStatus.Draft, InvoiceStatus.Pending)]
+    [InlineData(InvoiceStatus.Pending, InvoiceStatus.Paid)]
+    public void MovesAnInvoiceForwardOneStep(InvoiceStatus from, InvoiceStatus to)
+    {
+        Assert.True(InvoiceRules.AllowsMove(from, to));
+    }
+
+    [Theory]
+    [InlineData(InvoiceStatus.Draft)]
+    [InlineData(InvoiceStatus.Pending)]
+    [InlineData(InvoiceStatus.Paid)]
+    public void AcceptsTheStatusAnInvoiceAlreadyHas(InvoiceStatus status)
+    {
+        Assert.True(InvoiceRules.AllowsMove(status, status));
+    }
+
+    [Fact]
+    public void WillNotPayAnInvoiceThatWasNeverSent()
+    {
+        Assert.False(InvoiceRules.AllowsMove(InvoiceStatus.Draft, InvoiceStatus.Paid));
+    }
+
+    [Theory]
+    [InlineData(InvoiceStatus.Pending, InvoiceStatus.Draft)]
+    [InlineData(InvoiceStatus.Paid, InvoiceStatus.Pending)]
+    [InlineData(InvoiceStatus.Paid, InvoiceStatus.Draft)]
+    public void WillNotMoveAnInvoiceBackwards(InvoiceStatus from, InvoiceStatus to)
+    {
+        Assert.False(InvoiceRules.AllowsMove(from, to));
+    }
+
     static void Blank(Invoice invoice, string field)
     {
         switch (field)

@@ -21,6 +21,18 @@ public static class InvoiceRules
         ("description", invoice => invoice.Description),
     ];
 
+    public static bool AllowsStart(InvoiceStatus status) =>
+        status is InvoiceStatus.Draft or InvoiceStatus.Pending;
+
+    public static bool AllowsMove(InvoiceStatus from, InvoiceStatus to) =>
+        (from, to) switch
+        {
+            (InvoiceStatus.Draft, InvoiceStatus.Draft or InvoiceStatus.Pending) => true,
+            (InvoiceStatus.Pending, InvoiceStatus.Pending or InvoiceStatus.Paid) => true,
+            (InvoiceStatus.Paid, InvoiceStatus.Paid) => true,
+            _ => false,
+        };
+
     public static Dictionary<string, string[]> Check(Invoice invoice)
     {
         Dictionary<string, string[]> problems = [];

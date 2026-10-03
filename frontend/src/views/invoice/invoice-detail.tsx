@@ -40,6 +40,7 @@ export default function InvoiceDetail({ invoice }: { invoice: Invoice }) {
             />
             <InvoiceActions
               id={invoice.id}
+              status={invoice.status}
               onDelete={confirmDelete}
               className="ml-auto hidden md:flex"
             />
@@ -47,6 +48,7 @@ export default function InvoiceDetail({ invoice }: { invoice: Invoice }) {
           <InvoiceSummary invoice={invoice} />
           <InvoiceActions
             id={invoice.id}
+            status={invoice.status}
             onDelete={confirmDelete}
             className="bg-surface shadow-card -mx-6 mt-14 flex h-22.75 px-6 md:hidden"
           />

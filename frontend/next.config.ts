@@ -2,9 +2,9 @@ import { PHASE_PRODUCTION_BUILD } from "next/constants";
 import type { NextConfig } from "next";
 
 const missingApiUrl =
-  "NEXT_PUBLIC_API_URL is not set. Building without it ships a frontend that never reaches " +
-  "the API: sync switches off silently and the app falls back to localStorage alone. Set it " +
-  "to your own API origin — see frontend/README.md.";
+  "NEXT_PUBLIC_API_URL is not set. Building without it ships a frontend that points at " +
+  "localhost: every visitor gets the retry screen while their browser tries to reach a " +
+  "server on their own machine. Set it to your own API origin — see frontend/README.md.";
 
 const nextConfig: NextConfig = {
   output: "export",
