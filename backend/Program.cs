@@ -4,6 +4,7 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,11 +22,19 @@ builder.Services.ConfigureHttpJsonOptions(options =>
         new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
     )
 );
+
+var schema = DatabaseSchema.Resolve(builder.Configuration);
+
+builder.Services.AddSingleton(schema);
 builder.Services.AddDbContext<InvoiceDbContext>(options =>
     options
-        .UseNpgsql(DatabaseConnection.Resolve(builder.Configuration))
+        .UseNpgsql(
+            DatabaseConnection.Resolve(builder.Configuration),
+            npgsql => npgsql.MigrationsHistoryTable(HistoryRepository.DefaultTableName, schema.Name)
+        )
         .UseSnakeCaseNamingConvention()
 );
+
 builder.Services.AddProblemDetails();
 builder
     .Services.AddHealthChecks()

@@ -166,10 +166,44 @@ cause and no variable, which is a long way to travel for a stray pair of quotes 
 URI. Doing that in code rather than by hand is not a convenience either: the URI percent-encodes the
 password, so a password containing `@` or `#` is silently wrong when retyped, and one
 containing `;` terminates the key-value string early unless it is quoted. A URI also implies a
-managed host, which is where `SSL Mode=Require` and a pool ceiling of 10 come from — a free
-pooler allows far fewer connections than Npgsql's default of 100. `Require` encrypts without
-verifying the certificate; pinning the provider's CA and moving to `VerifyFull` is the upgrade
-if this ever holds anything worth stealing.
+managed host, which is where `SSL Mode=Require`, a pool ceiling of 5 and a sixty-second idle
+lifetime come from — a free pooler allows far fewer connections than Npgsql's default of 100.
+`Require` encrypts without verifying the certificate; pinning the provider's CA and moving to
+`VerifyFull` is the upgrade if this ever holds anything worth stealing.
+
+That ceiling is arithmetic rather than taste. A free instance allows 60 database connections,
+and the platform's own services plus the superuser reservation take roughly half. Session mode
+— what the dashboard's port-5432 URI gives, and what Render needs because the direct host is
+IPv6-only — pins one database connection per pooled client for the life of the session, so the
+limit that binds is that 60 rather than the pooler's 200 client slots. Budget two instances per
+service across a deploy and the sum is apps × 2 × `MaxPoolSize` against roughly 32 usable, so
+five leaves room for a third service. The idle lifetime matters here for the same reason and
+would not on a dedicated database: a service sitting idle on its connections is holding slots a
+neighbour needs.
+
+## One database, a schema per app
+
+The free plan grants two projects per organisation and both were spent, which left a third
+service wanting a database with nowhere to put one. So the two backends share a single project
+and take a schema each — `invoice` here, `todo` next door — rather than a project each.
+
+Sharing needs both halves of the move, and either half alone is worse than neither.
+`HasDefaultSchema` moves the tables; `MigrationsHistoryTable` moves the ledger recording which
+migrations have run. Move only the tables and both services keep reading and writing
+`public.__EFMigrationsHistory`, where each reads the other's migration ids as its own history
+and then generates a migration dropping the other's tables. The two calls sit beside each other
+in `Program.cs`, fed by the same local, so they cannot drift apart.
+
+The schema name is configuration rather than a constant, so one connection string serves every
+service and only `Database__Schema` differs between them. `DatabaseSchema` refuses anything
+that is not a bare identifier, because the value reaches generated DDL rather than a parameter.
+It is per service and close to permanent: `MoveToOwnSchema` names the schema it moves to, so
+repointing an existing service at a different one needs a new migration rather than just a new
+variable.
+
+A schema is a namespace and not a security boundary — the role in the connection string reads
+every schema in the database. What it buys is that two services' migrations cannot collide, and
+that these tables leave `public`, which is the only schema the Data API exposes by default.
 
 ## Why migrations, not EnsureCreated
 
@@ -189,6 +223,14 @@ than one needs the migration to move out of the boot path. `/health` now runs a 
 against `invoices` rather than opening a connection, which is the only version of the check
 worth having: renaming the table away turns `/health` from `200 Healthy` into
 `503 Unhealthy` while a plain connection still opens perfectly well.
+
+Applying them is gated. `Migrations__Apply` defaults to false, and a boot that finds pending
+migrations without it refuses to start rather than serving against a schema it does not match.
+Render holds the previous instance when a new one fails its health check, so a refusal costs a
+no-op deploy instead of an outage, and the deploy that *should* migrate is one where the
+variable was set deliberately. Ungated, every commit is a production migration — tolerable for
+a service that re-seeds itself from `SeedInvoices`, and not for the neighbour sharing this
+database, whose rows someone would miss.
 
 ## Keeping it awake
 

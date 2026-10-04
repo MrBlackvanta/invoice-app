@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-public class InvoiceDbContext(DbContextOptions<InvoiceDbContext> options) : DbContext(options)
+public class InvoiceDbContext(DbContextOptions<InvoiceDbContext> options, DatabaseSchema schema)
+    : DbContext(options)
 {
     const int IdLength = 6;
     const int StatusLength = 7;
@@ -13,6 +14,8 @@ public class InvoiceDbContext(DbContextOptions<InvoiceDbContext> options) : DbCo
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
+        builder.HasDefaultSchema(schema.Name);
+
         var invoice = builder.Entity<Invoice>();
 
         invoice.HasKey(entity => entity.Id);

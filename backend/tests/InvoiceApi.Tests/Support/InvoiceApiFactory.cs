@@ -28,6 +28,8 @@ public class InvoiceApiFactory : WebApplicationFactory<Program>
         connection.Open();
 
         builder.UseEnvironment(Environments.Production);
+        builder.UseSetting("Database:Schema", "invoice");
+        builder.UseSetting("Migrations:Apply", "true");
         builder.ConfigureServices(services =>
         {
             ForgetPostgres(services);

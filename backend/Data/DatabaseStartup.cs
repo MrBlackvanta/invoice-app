@@ -4,10 +4,10 @@ public static class DatabaseStartup
 {
     public static async Task PrepareDatabaseAsync(this WebApplication app)
     {
+        await DatabaseMigrations.EnsureUpToDateAsync<InvoiceDbContext>(app.Services);
+
         await using var scope = app.Services.CreateAsyncScope();
         var database = scope.ServiceProvider.GetRequiredService<InvoiceDbContext>();
-
-        await database.Database.MigrateAsync();
 
         if (await database.Invoices.AnyAsync())
         {
