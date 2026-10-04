@@ -48,6 +48,18 @@ public class DatabaseMigrationsTests : IDisposable
     }
 
     [Fact]
+    public async Task LeavesNoLedgerBehindWhenItRefuses()
+    {
+        await using var services = Gated(apply: false);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            DatabaseMigrations.EnsureUpToDateAsync<InvoiceDbContext>(services)
+        );
+
+        Assert.Equal(0L, await CountLedgerTables());
+    }
+
+    [Fact]
     public async Task AppliesPendingMigrationsWhenTheGateIsOpen()
     {
         await using var services = Gated(apply: true);
@@ -73,6 +85,15 @@ public class DatabaseMigrationsTests : IDisposable
         );
 
         Assert.Null(refusal);
+    }
+
+    async Task<long> CountLedgerTables()
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            "select count(*) from sqlite_master where name = '__EFMigrationsHistory'";
+
+        return (long)(await command.ExecuteScalarAsync())!;
     }
 
     public void Dispose() => connection.Dispose();
