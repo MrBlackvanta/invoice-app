@@ -137,7 +137,7 @@ public class DatabaseConnectionTests
     [Fact]
     public void CapsThePoolSoAFreePoolerIsNotExhausted()
     {
-        Assert.Equal(5, Resolve(Uri).MaxPoolSize);
+        Assert.Equal(4, Resolve(Uri).MaxPoolSize);
     }
 
     [Fact]
